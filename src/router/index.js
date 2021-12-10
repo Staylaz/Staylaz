@@ -139,18 +139,18 @@ export const asyncRoutes = [
   //   ]
   // },
 
-  // {
-  //   path: '/error-log',
-  //   component: Layout,
-  //   children: [
-  //     {
-  //       path: 'log',
-  //       component: () => import('@/views/error-log/index'),
-  //       name: 'ErrorLog',
-  //       meta: { title: 'Error Log', icon: 'bug' }
-  //     }
-  //   ]
-  // },
+  {
+    path: '/customerService',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/customerService/index'),
+        name: 'customerService',
+        meta: { title: 'Customer Service', icon: 'people' }
+      }
+    ]
+  },
 
   // {
   //   path: '/zip',
