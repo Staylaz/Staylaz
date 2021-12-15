@@ -2,26 +2,25 @@
   <div class="app-container">
     <div class="sub-navbar">
       <div class="left-part">
-        <!-- v-model="contactType" class="contactTypeRadio" -->
-        <el-radio-group>
-          <el-radio-button label="All" />
-          <el-radio-button label="Stranger" />
+        <!-- class="contactTypeRadio" -->
+        <el-radio-group
+          v-model="contactType"
+          size="mini"
+          class="contract-type-radio"
+        >
+          <el-radio-button label="all">All</el-radio-button>
+          <el-radio-button label="stranger">Stranger</el-radio-button>
         </el-radio-group>
 
-        <el-dropdown trigger="click">
-          <el-button style="padding: 8px 10px" size="small" type="common">
+        <el-dropdown trigger="click" size="mini">
+          <el-button type="common" size="mini">
             Filter by tag
             <i class="el-icon-caret-bottom el-icon--right" />
           </el-button>
           <el-dropdown-menu slot="dropdown">
-            <!-- <el-dropdown-item
-              v-for="item of contactTypeOptions"
-              :key="item.value"
-              :disabled="contactType === item.value"
-              :command="item.value"
-            >
-              {{ item.label }}
-            </el-dropdown-item> -->
+            <el-dropdown-item v-for="item of tags" :key="item" :command="item">
+              {{ item }}
+            </el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
       </div>
@@ -46,7 +45,8 @@
 
     <div class="customer-service-container">
       <contract-people-container />
-      <chat-container />
+      <chat-container :chat-users-data="chatUsersData" />
+      <!-- <batch-chat-container></batch-chat-container> -->
       <resource-library-container />
     </div>
   </div>
@@ -55,29 +55,76 @@
 <script>
 // import { toggleClass } from '@/utils'
 import '@/assets/custom-theme/index.css' // the theme changed version element-ui css
+// Vue Components
 import ContractPeopleContainer from './contactPerson.vue'
 import ChatContainer from './chat.vue'
+import BatchChatContainer from './batchChat.vue'
 import ResourceLibraryContainer from './resourceLibrary.vue'
+
+// API
+import { getChat, getChatRecord, sendMessage } from '@/api/customerService'
+
 export default {
   name: 'Theme',
   components: {
     ContractPeopleContainer,
     ChatContainer,
+    BatchChatContainer,
     ResourceLibraryContainer
   },
   data() {
     return {
-      contactType: 'all',
-      contactTypeOptions: {
-        all: { label: 'All message', value: 'all' },
-        stranger: { label: 'Stranger', value: 'stranger' }
-      }
+      contactType: 'stranger',
+      tags: ['activity1', 'activity2', 'activity3', 'activity4'],
+      chatUsersData: [],
+      activeUserID: null,
+      chatRecord: []
     }
   },
   watch: {},
+  created() {
+    this.getChatData()
+  },
   methods: {
     handleContactType(type) {
       this.contactType = type
+    },
+
+    getChatData() {
+      getChat()
+        .then((response) => {
+          this.chatUsersData = response.data.users
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
+
+    getChatRecord(id) {
+      this.activeUserID = id
+      getChatRecord({ userid: '' + id })
+        .then((response) => {
+          console.log(response, '=========')
+          this.chatRecord = response.data.messages
+          this.chatRecord.sort((a, b) => {
+            return a.mid - b.mid <= 0 ? -1 : 1
+          })
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
+
+    sendMessage(message, cb) {
+      sendMessage({ userid: this.activeUserID + '', message: message })
+        .then((response) => {
+          console.log(response, '=========')
+          this.getChatRecord(this.activeUserID)
+          cb()
+        })
+        .catch((err) => {
+          console.log(err)
+        })
     }
   }
 }
@@ -104,5 +151,9 @@ export default {
   background-color: #f2f3f5;
   display: flex;
   justify-content: space-between;
+}
+
+.contract-type-radio {
+  margin-right: 16px;
 }
 </style>

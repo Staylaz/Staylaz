@@ -54,7 +54,6 @@ module.exports = [
     response: config => {
       const { token } = config.query
       const info = users[token]
-
       // mock error
       if (!info) {
         return {
@@ -62,7 +61,6 @@ module.exports = [
           message: 'Login failed, unable to get user details.'
         }
       }
-
       return {
         code: 20000,
         data: info

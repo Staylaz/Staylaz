@@ -13,11 +13,8 @@
 
       <div class="contract-info">
         <div class="information-box">
-          <el-breadcrumb separator-class="el-icon-s-finance">
+          <el-breadcrumb separator-class="el-icon-minus">
             <el-breadcrumb-item>A00001</el-breadcrumb-item>
-            <el-breadcrumb-item>Address</el-breadcrumb-item>
-            <el-breadcrumb-item>Address</el-breadcrumb-item>
-            <el-breadcrumb-item>Address</el-breadcrumb-item>
             <el-breadcrumb-item>Address</el-breadcrumb-item>
           </el-breadcrumb>
 
@@ -66,14 +63,14 @@
       <div class="chat-content">
         <div class="chat-record-list">
           <div
-            v-for="(item, index) in 100"
+            v-for="(item, index) in $parent.chatRecord"
             :key="index"
             class="chat-record-item"
-            :class="{ 'mine-message-item': index % 2 === 0 }"
+            :class="{ 'mine-message-item': item.senderid !== item.userid }"
           >
             <div class="head-box">
               <img
-                v-if="index % 2 === 0"
+                v-if="item.senderid !== item.userid"
                 src="https://hbimg.huabanimg.com/3f2935be7c51fd34d37d6aa4c83f0f0ad81a1eb4d0e0-Wg4Qpa_fw1200"
                 alt=""
               >
@@ -85,9 +82,19 @@
             </div>
 
             <div class="message-content">
-              <p class="name">A001</p>
+              <p class="name">{{ item.senderid }}</p>
               <p class="message">
-                Dynamically add more routes to the router. The argument must be
+                <!-- <img src="" alt=""> -->
+                <span>{{ item.message }}</span>
+                <!-- <el-image
+                  style="width: 100px; height: 100px"
+                  src="https://hbimg.huabanimg.com/a939f3ff0d6945d6f6736d08ddde7518bc5b2bc51a6dc-34dwbk"
+                  :preview-src-list="[
+                    'https://hbimg.huabanimg.com/a939f3ff0d6945d6f6736d08ddde7518bc5b2bc51a6dc-34dwbk',
+                  ]"
+                >
+                </el-image> -->
+                <span class="time">10:00 PM</span>
               </p>
             </div>
           </div>
@@ -95,16 +102,55 @@
       </div>
 
       <div class="chat-input-box">
+        <div class="file-link-bar">
+          <el-popover
+            v-model="emoticonsPopoverVisible"
+            class="emoticons-popover"
+            placement="top"
+            width="350"
+            trigger="click"
+          >
+            <div class="emoticons-content">
+              <el-tabs
+                class="emoticons-tabs"
+                type="border-card"
+                tab-position="bottom"
+              >
+                <el-tab-pane>
+                  <img
+                    slot="label"
+                    src="../../assets/svg/emoticons.svg"
+                    alt=""
+                    class="nav-icon"
+                  >
+                  <VEmojiPicker v-show="1" @select="selectEmoji" />
+                </el-tab-pane>
+                <el-tab-pane>
+                  <img
+                    slot="label"
+                    class="nav-icon"
+                    src="../../assets/svg/sticker.svg"
+                    alt=""
+                  >
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+            <img slot="reference" src="../../assets/svg/emoticons.svg" alt="">
+          </el-popover>
+          <img src="../../assets/svg/document.svg" alt="">
+          <img src="../../assets/svg/picture.svg" alt="">
+        </div>
         <el-input
           v-model="textarea"
           type="textarea"
           :rows="5"
           placeholder="Please enter content"
           resize="none"
+          :autofocus="true"
         />
 
         <div class="chat-buttons">
-          <el-button type="primary">Send</el-button>
+          <el-button type="primary" @click="sendMessage">Send</el-button>
         </div>
       </div>
     </div>
@@ -112,18 +158,34 @@
 </template>
 
 <script>
+import { VEmojiPicker } from 'v-emoji-picker'
+
 export default {
   name: 'Contract',
+  components: {
+    VEmojiPicker
+  },
+
   data() {
     return {
       userTags: [],
       inputVisible: false,
       inputValue: '',
-      textarea: null
+      textarea: '',
+      chatModel: 'private', // batchSending，
+      srcList: [
+        'https://hbimg.huabanimg.com/a939f3ff0d6945d6f6736d08ddde7518bc5b2bc51a6dc-34dwbk'
+      ],
+      emoticonsPopoverVisible: false
+      // activeUserID:$parent.activeUserID,
     }
   },
 
   methods: {
+    toggleBatchChat() {
+      this.$store.dispatch('app/toggleSideBar') // TODO
+    },
+
     handleClose(tag) {
       this.userTags.splice(this.userTags.indexOf(tag), 1)
     },
@@ -142,6 +204,26 @@ export default {
       }
       this.inputVisible = false
       this.inputValue = ''
+    },
+
+    onInput(event) {
+      // 事件。数据包含文本区域的值
+    },
+
+    clearTextarea() {
+      this.$refs.emoji.clear()
+    },
+
+    selectEmoji(emoji) {
+      this.textarea = this.textarea + emoji['data']
+      this.emoticonsPopoverVisible = false
+      console.log(this.textarea)
+    },
+
+    sendMessage() {
+      this.$parent.sendMessage(this.textarea, () => {
+        this.textarea = null
+      })
     }
   }
 }
@@ -235,7 +317,7 @@ export default {
   .chat-box {
     width: 100%;
     height: 84%;
-    margin-top: 2px;
+    margin-top: 1px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -251,21 +333,28 @@ export default {
       overflow-y: auto;
       .chat-record-list {
         width: 100%;
-
+        padding-bottom: 30px;
         .chat-record-item {
-          width: 80%;
-          //   background-color: rgb(228, 89, 89);
+          // width: 100%;
+          // background-color: rgb(221, 238, 66);
+          //background-color: rgb(228, 89, 89);
+          padding: 0 10px;
+          box-sizing: border-box;
+          // background-color: rgb(199, 71, 71);
           margin-top: 16px;
-          display: flex;
-          .head-box {
-            width: 44px;
-            height: 44px;
+          box-sizing: border-box;
+          // padding: 0 25% 0 0;
+          position: relative;
 
+          // max-width: 80%;
+          // display: flex;
+          .head-box {
+            width: 40px;
+            height: 40px;
+            // background-color: rgb(160, 53, 53);
             border-radius: 50%;
             overflow: hidden;
             position: relative;
-            margin-right: 8px;
-
             img {
               position: absolute;
               left: 50%;
@@ -276,10 +365,15 @@ export default {
           }
 
           .message-content {
-            flex: 1;
-
+            display: inline-block;
+            background-color: #f2f3f5;
+            border-radius: 10px;
+            padding: 4px 10px;
+            // margin-left: 10%;
+            margin-top: -30px;
+            margin-left: 50px;
             .name {
-              width: 100%;
+              // width: 100%;
               margin: 8px 0 4px;
               font-size: 14px;
               font-weight: 500;
@@ -288,17 +382,34 @@ export default {
               margin: 0;
               font-size: 14px;
               line-height: 20px;
+              padding-bottom: 20px;
+              min-width: 80px;
+              max-width: 500px;
+              position: relative;
+              .time {
+                color: rgb(105, 105, 105);
+                white-space: nowrap;
+                font-style: italic;
+                position: absolute;
+                right: 0;
+                bottom: 1%;
+                font-size: 8px;
+              }
             }
           }
         }
         .mine-message-item {
-          margin-left: 20%;
-          flex-direction: row-reverse;
+          text-align: right;
           .head-box {
-            margin-right: 0px;
-            margin-left: 8px;
+            left: 100%;
+            transform: translate(-100%, 0);
           }
 
+          .message-content {
+            text-align: left;
+            // margin-top: -30px;
+            margin-right: 50px;
+          }
           .name {
             text-align: right;
           }
@@ -308,14 +419,30 @@ export default {
 
     .chat-input-box {
       width: 100%;
-      height: 24.5%;
+      height: 24.8%;
       background-color: #fff;
       box-sizing: border-box;
+      .file-link-bar {
+        width: 100%;
+        height: 17%;
+        box-sizing: border-box;
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
 
+        img {
+          width: 30px;
+          margin-right: 5px;
+        }
+        img:nth-child(3) {
+          width: 22px;
+          margin-left: 4px;
+        }
+      }
       .el-textarea {
         width: 100%;
-        height: 70%;
-
+        height: 45%;
+        //  background-color: rgb(146, 52, 52);
         .el-textarea__inner {
           border: 0px solid #000;
           //   padding: 5px 15px 30px !important;
@@ -347,5 +474,25 @@ export default {
       //         transform: translate(-50%,-50%);
     }
   }
+}
+
+.information-box ::v-deep .el-breadcrumb__separator {
+  transform: rotate(90deg);
+}
+
+.emoticons-content {
+  width: 100%;
+  height: 480px;
+  .nav-icon {
+    width: 30px;
+    margin-top: 4px;
+  }
+}
+.emoticons-tabs::v-deep .el-tabs__content {
+  padding: 0;
+}
+
+.emoticons-popover {
+  padding: 0;
 }
 </style>

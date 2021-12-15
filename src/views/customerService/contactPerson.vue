@@ -1,21 +1,58 @@
 <template>
   <div class="contract-people-container">
     <div class="top-bar">
-      <svg-icon icon-class="search" />
+      <div v-show="!searchContractPeople">
+        <span>
+          <span
+            v-show="!isBatchSelect"
+            @click="isBatchSelect = true"
+          >Batch</span>
+          <span
+            v-show="isBatchSelect"
+            class="cancel-span"
+            @click="isBatchSelect = false"
+          >Cancel</span>
+        </span>
 
-      <el-radio-group v-model="contactType" class="contactTypeRadio">
-        <el-radio label="Unread" />
-      </el-radio-group>
+        <el-radio-group
+          v-show="!isBatchSelect"
+          v-model="contactType"
+          class="contactTypeRadio"
+        >
+          <el-radio label="Unread" />
+        </el-radio-group>
 
-      <span>Batch</span>
+        <svg-icon
+          v-show="!isBatchSelect"
+          icon-class="search"
+          @click="searchContractPeople = true"
+        />
+      </div>
+
+      <div v-show="searchContractPeople">
+        <el-input
+          v-model="searchContractPeopleValue"
+          size="small"
+          placeholder="Search"
+          prefix-icon="el-icon-search"
+        >
+          <!-- <i class="el-icon-close"  slot="suffix"></i> -->
+          <el-button
+            slot="append"
+            icon="el-icon-close"
+            @click="searchContractPeople = false"
+          />
+        </el-input>
+      </div>
     </div>
 
     <div class="contract-people-list">
       <div
-        v-for="(item, index) in 40"
+        v-for="(item, index) in chatUsersData"
         :key="index"
         class="people-item"
-        :class="{ 'is-active': index === activeContractIndex }"
+        :class="{ 'is-active': item.userid === $parent.activeUserID }"
+        @click="switchChat(item.userid)"
       >
         <div class="head-img">
           <img
@@ -24,29 +61,73 @@
           >
         </div>
         <div class="info-box">
-          <p class="id">A001</p>
-          <p class="message">
-            Our documentation is a great resource for learning how to configure
-            TinyMCE.
-          </p>
+          <p class="id">{{ item.userid }}</p>
+          <p class="message">...</p>
         </div>
 
         <div class="status-box">
-          <p class="time">01:10AM</p>
-          <div class="unread">9</div>
+          <p class="time">{{ item.timestamp | timestampFilter }}</p>
+          <div v-show="item.number && !isBatchSelect" class="unread">
+            {{ item.number }}
+          </div>
+          <div v-show="isBatchSelect" class="batch-select is-select">
+            <img src="../../assets/svg/select.svg" alt="">
+          </div>
         </div>
       </div>
     </div>
   </div>
-
 </template>
 
 <script>
+// API
+import { getChat } from '@/api/customerService'
 export default {
   name: 'Contract',
+
+  filters: {
+    timestampFilter(time) {
+      const _data = new Date(parseInt(time) * 1000).toLocaleString().replace(/:\d{1,2}$/, ' ')
+      var now = new Date(parseInt(time) * 1000)
+      let _hour = ''
+      let apn = 'AM'
+      if (now.getHours() > 10) {
+        _hour = now.getHours() - 12
+        apn = 'PM'
+      }
+      return _data.substring(13) + apn
+    }
+  },
   data() {
     return {
-      activeContractIndex: 0
+      activeContractIndex: 0,
+      searchContractPeople: false,
+      searchContractPeopleValue: '',
+      isBatchSelect: false,
+      chatUsersData: []
+    }
+  },
+
+  created() {
+    this.getChatData()
+  },
+
+  methods: {
+    getChatData() {
+      getChat()
+        .then((response) => {
+          this.chatUsersData = response.data.users
+          if (!this.$parent.activeUserID) {
+            this.switchChat(response.data.users[0]['userid'])
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    },
+
+    switchChat(id) {
+      this.$parent.getChatRecord(id)
     }
   }
 }
@@ -66,9 +147,19 @@ export default {
     background-color: #f2f3f5;
     box-sizing: border-box;
     padding: 0 5%;
+    color: #606266;
+    .cancel-span {
+      color: green;
+    }
+  }
+
+  .top-bar > div {
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-direction: row-reverse;
   }
 
   .contract-people-list {
@@ -141,6 +232,29 @@ export default {
           font-size: 12px;
           font-family: Verdana, Geneva, Tahoma, sans-serif;
           margin-left: 70%;
+        }
+
+        .batch-select {
+          width: 16px;
+          height: 16px;
+          margin-left: 70%;
+          border-radius: 50%;
+          background-color: #fff;
+          .el-button {
+            padding: 0;
+          }
+        }
+
+        .batch-select.is-select {
+          background-color: rgb(107, 230, 103);
+          position: relative;
+          img {
+            width: 80%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+          }
         }
       }
     }
