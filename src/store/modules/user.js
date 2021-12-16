@@ -37,6 +37,7 @@ const actions = {
         const { data } = response
         commit('SET_TOKEN', data.token)
         setToken(data.token)
+        creatWebsocket(data.token)
         resolve()
       }).catch(error => {
         reject(error)
@@ -65,6 +66,7 @@ const actions = {
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)
         commit('SET_INTRODUCTION', introduction)
+        
         resolve(data)
       }).catch(error => {
         reject(error)
@@ -128,4 +130,66 @@ export default {
   state,
   mutations,
   actions
+}
+
+function creatWebsocket(token){
+  console.log("CREAT WEBSOCKET")
+    const socket = io("wss://api.huloot.io", {
+      path: "/ws",
+      query: {
+        "access-token":token,
+      },
+    });
+    WebSocketInit(socket);
+}
+
+function WebSocketInit(socket){
+  let that = this;
+  this.ws = new WebSocket({
+    socket:socket,
+    url: "wss://api.huloot.io",
+    path: "/ws",
+    header: this.user.getHeader(),
+  });
+
+  this.ws.on("connect", function () {
+    game.method = "ws";
+
+    console.log("ws connect success");
+    that.ws.off("connect");
+
+    that.ws.onBroadcase("news", function (data) {
+      that.newsComponent.pushMsg(data);
+    });
+
+    that.load(res, action);
+  });
+
+  this.ws.on("error", function (e) {
+    var msg = e.detail;
+    if (msg == "authentication error") {
+      that.loading.end();
+      that.toast("login_failed");
+    }
+  });
+
+  this.ws.on("disconnect", function (e) {
+    that.disconnectStatus = 1;
+    setTimeout(function () {
+      if (that.disconnectStatus == 1) {
+        that.disconnectStatus = 2;
+        that.toast("error_disconnect", false);
+      }
+    }, 2000);
+  });
+
+  this.ws.on("reconnect", function (e) {
+    if (that.disconnectStatus == 2) {
+      that.toast("reconnect");
+      that.stableScene.onRefresh(true);
+    }
+    that.disconnectStatus = 0;
+  });
+
+  this.ws.load();
 }

@@ -7,67 +7,10 @@
 <script>
 export default {
   created() {
-    // setInterval(this.WebSocket_StatusCheck, 3000)
-    const socket = io("wss://api.huloot.io", {
-      path: "/ws",
-      query: {
-        "access-token":
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjEsImlhdCI6MTYzOTYyNzMxOSwiZXhwIjoxNjM5ODg2NTE5fQ.Gj8MOcqvSa4BhFI3HP9iORudUeP4L9Orh5y25Zw7988",
-      },
-    });
-    this.WebSocketINI();
+  
   },
   methods: {
-    WebSocketINI() {
-      let that = this;
-      this.ws = new WebSocket({
-        url: serverUrl,
-        path: "/ws",
-        header: this.user.getHeader(),
-      });
-
-      this.ws.on("connect", function () {
-        game.method = "ws";
-
-        console.log("ws connect");
-        that.ws.off("connect");
-
-        that.ws.onBroadcase("news", function (data) {
-          that.newsComponent.pushMsg(data);
-        });
-
-        that.load(res, action);
-      });
-
-      this.ws.on("error", function (e) {
-        var msg = e.detail;
-        if (msg == "authentication error") {
-          that.loading.end();
-          that.toast("login_failed");
-        }
-      });
-
-      this.ws.on("disconnect", function (e) {
-        that.disconnectStatus = 1;
-        setTimeout(function () {
-          if (that.disconnectStatus == 1) {
-            that.disconnectStatus = 2;
-            that.toast("error_disconnect", false);
-          }
-        }, 2000);
-      });
-
-      this.ws.on("reconnect", function (e) {
-        if (that.disconnectStatus == 2) {
-          that.toast("reconnect");
-          that.stableScene.onRefresh(true);
-        }
-        that.disconnectStatus = 0;
-      });
-
-      this.ws.load();
-    },
-
+  
     // // 1、WebSocket连接状态检测：
     //   WebSocket_StatusCheck() {
     //     if (!this.$WebSocket.WebSocketHandle || this.$WebSocket.WebSocketHandle.readyState !== 1) {
