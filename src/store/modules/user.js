@@ -1,6 +1,18 @@
-import { login, logout, getInfo } from '@/api/user'
-import { getToken, setToken, removeToken } from '@/utils/auth'
-import router, { resetRouter } from '@/router'
+import {
+  login,
+  logout,
+  getInfo
+} from '@/api/user'
+import {
+  getToken,
+  setToken,
+  removeToken
+} from '@/utils/auth'
+import router, {
+  resetRouter
+} from '@/router'
+
+import WebSocket from '@/utils/websocket'
 
 const state = {
   token: getToken(),
@@ -30,14 +42,23 @@ const mutations = {
 
 const actions = {
   // user login
-  login({ commit }, userInfo) {
-    const { username, password } = userInfo
+  login({
+    commit
+  }, userInfo) {
+    const {
+      username,
+      password
+    } = userInfo
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
-        const { data } = response
+      login({
+        username: username.trim(),
+        password: password
+      }).then(response => {
+        const {
+          data
+        } = response
         commit('SET_TOKEN', data.token)
         setToken(data.token)
-        creatWebsocket(data.token)
         resolve()
       }).catch(error => {
         reject(error)
@@ -46,16 +67,32 @@ const actions = {
   },
 
   // get user info
-  getInfo({ commit, state }) {
+  getInfo({
+    commit,
+    state
+  }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
-        const { data } = response
+        const {
+          data
+        } = response
 
         if (!data) {
           reject('Verification failed, please Login again.')
         }
 
-        const { roles, name, avatar, introduction } = data
+        try {
+          creatWebsocket(state.token)
+        } catch (err) {
+          console.log(err)
+        }
+
+        const {
+          roles,
+          name,
+          avatar,
+          introduction
+        } = data
 
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
@@ -66,7 +103,7 @@ const actions = {
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)
         commit('SET_INTRODUCTION', introduction)
-        
+
         resolve(data)
       }).catch(error => {
         reject(error)
@@ -75,7 +112,11 @@ const actions = {
   },
 
   // user logout
-  logout({ commit, state, dispatch }) {
+  logout({
+    commit,
+    state,
+    dispatch
+  }) {
     return new Promise((resolve, reject) => {
       logout(state.token).then(() => {
         commit('SET_TOKEN', '')
@@ -85,7 +126,9 @@ const actions = {
 
         // reset visited views and cached views
         // to fixed https://github.com/PanJiaChen/vue-element-admin/issues/2485
-        dispatch('tagsView/delAllViews', null, { root: true })
+        dispatch('tagsView/delAllViews', null, {
+          root: true
+        })
 
         resolve()
       }).catch(error => {
@@ -95,7 +138,9 @@ const actions = {
   },
 
   // remove token
-  resetToken({ commit }) {
+  resetToken({
+    commit
+  }) {
     return new Promise(resolve => {
       commit('SET_TOKEN', '')
       commit('SET_ROLES', [])
@@ -105,23 +150,32 @@ const actions = {
   },
 
   // dynamically modify permissions
-  async changeRoles({ commit, dispatch }, role) {
+  async changeRoles({
+    commit,
+    dispatch
+  }, role) {
     const token = role + '-token'
 
     commit('SET_TOKEN', token)
     setToken(token)
 
-    const { roles } = await dispatch('getInfo')
+    const {
+      roles
+    } = await dispatch('getInfo')
 
     resetRouter()
 
     // generate accessible routes map based on roles
-    const accessRoutes = await dispatch('permission/generateRoutes', roles, { root: true })
+    const accessRoutes = await dispatch('permission/generateRoutes', roles, {
+      root: true
+    })
     // dynamically add accessible routes
     router.addRoutes(accessRoutes)
 
     // reset visited views and cached views
-    dispatch('tagsView/delAllViews', null, { root: true })
+    dispatch('tagsView/delAllViews', null, {
+      root: true
+    })
   }
 }
 
@@ -132,64 +186,48 @@ export default {
   actions
 }
 
-function creatWebsocket(token){
-  console.log("CREAT WEBSOCKET")
-    const socket = io("wss://api.huloot.io", {
-      path: "/ws",
-      query: {
-        "access-token":token,
-      },
-    });
-    WebSocketInit(socket);
-}
-
-function WebSocketInit(socket){
-  let that = this;
-  this.ws = new WebSocket({
-    socket:socket,
-    url: "wss://api.huloot.io",
-    path: "/ws",
-    header: this.user.getHeader(),
-  });
-
-  this.ws.on("connect", function () {
-    game.method = "ws";
-
-    console.log("ws connect success");
-    that.ws.off("connect");
-
-    that.ws.onBroadcase("news", function (data) {
-      that.newsComponent.pushMsg(data);
-    });
-
-    that.load(res, action);
-  });
-
-  this.ws.on("error", function (e) {
-    var msg = e.detail;
-    if (msg == "authentication error") {
-      that.loading.end();
-      that.toast("login_failed");
+function creatWebsocket(token) {
+  console.log('CREAT WEBSOCKET', token)
+  const that = this
+  var ws = new WebSocket({
+    url: 'wss://api.huloot.io',
+    // url: "ws://127.0.0.1:6088",
+    path: '/ws',
+    header: {
+      'access-token': token
     }
-  });
+  })
+  console.log(ws)
+  ws.on('connect', function() {
+    console.log('ws connect success')
+    ws.off('connect')
+  })
 
-  this.ws.on("disconnect", function (e) {
-    that.disconnectStatus = 1;
-    setTimeout(function () {
+  ws.on('error', function(e) {
+    var msg = e.detail
+    if (msg == 'authentication error') {
+      // that.loading.end();
+      // that.toast("login_failed");
+    }
+  })
+
+  ws.on('disconnect', function(e) {
+    that.disconnectStatus = 1
+    setTimeout(function() {
       if (that.disconnectStatus == 1) {
-        that.disconnectStatus = 2;
-        that.toast("error_disconnect", false);
+        that.disconnectStatus = 2
+        // that.toast("error_disconnect", false);
       }
-    }, 2000);
-  });
+    }, 2000)
+  })
 
-  this.ws.on("reconnect", function (e) {
+  ws.on('reconnect', function(e) {
     if (that.disconnectStatus == 2) {
-      that.toast("reconnect");
-      that.stableScene.onRefresh(true);
+      // that.toast("reconnect");
+      // that.stableScene.onRefresh(true);
     }
-    that.disconnectStatus = 0;
-  });
+    that.disconnectStatus = 0
+  })
 
-  this.ws.load();
+  ws.load()
 }
