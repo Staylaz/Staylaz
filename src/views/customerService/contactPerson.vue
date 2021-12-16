@@ -53,7 +53,6 @@
     </div>
 
     <div class="contract-people-list">
-      
       <div
         v-for="(item, index) in chatUsersData"
         :key="index"
@@ -62,8 +61,7 @@
         @click="switchChat(item.userid)"
         v-show="searchContractPeopleFilter(item)"
       >
-
-        <div class="head-img" >
+        <div class="head-img">
           <img
             src="https://hbimg.huabanimg.com/32f39125c45f42f2f9c378435c93525832663d6311d6ea-09TUBd"
             alt=""
@@ -117,6 +115,7 @@ export default {
       searchContractPeopleValue: "",
       isBatchSelect: false,
       chatUsersData: [],
+      ws: this.$store.state.socket.ws,
     };
   },
 
@@ -126,16 +125,23 @@ export default {
 
   methods: {
     getChatData() {
-      getChat()
-        .then((response) => {
-          this.chatUsersData = response.data.users;
-          if (!this.$parent.activeUserID) {
-            this.switchChat(response.data.users[0]["userid"]);
+      let that = this;
+      this.ws.emit(
+        "telegram",
+        {
+          action: "chat",
+        },
+        function (code,msg,data) {
+          that.chatUsersData = data.users;
+          if (!that.$parent.activeUserID) {
+            that.switchChat(data.users[0]["userid"]);
           }
-        })
-        .catch((err) => {
+        }
+      ).catch((err) => {
           console.log(err);
         });
+     
+  
     },
 
     switchChat(id) {
@@ -147,14 +153,12 @@ export default {
     },
 
     searchContractPeopleFilter(item) {
-      console.log(item,'==========',item.id)
+      console.log(item, "==========", item.id);
       if (!this.searchContractPeople) {
-        return true
+        return true;
       } else {
         // item.userid
-
         // if (this.searchContractPeopleValue )
-        
       }
     },
   },

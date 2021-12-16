@@ -6,11 +6,9 @@
 
 <script>
 export default {
-  created() {
-  
-  },
-  methods: {},
-};
+  created() {},
+  methods: {}
+}
 </script>
 
 <style lang="scss"></style>

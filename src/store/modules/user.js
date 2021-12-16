@@ -57,7 +57,6 @@ const actions = {
         } = response
         commit('SET_TOKEN', data.token)
         setToken(data.token)
-        // creatWebsocket(data.token)
         resolve()
       }).catch(error => {
         reject(error)
@@ -78,6 +77,14 @@ const actions = {
 
         if (!data) {
           reject('Verification failed, please Login again.')
+        }
+
+        try {
+          // creatWebsocket(state.token)
+          this.dispatch('socket/webSocketInit',{token:state.token})
+          console.log('_____________________________________')
+        } catch (err) {
+          console.log(err)
         }
 
         const {
@@ -179,66 +186,48 @@ export default {
   actions
 }
 
-function creatWebsocket(token) {
-  console.log("CREAT WEBSOCKET")
-  const socket = io("wss://api.huloot.io", {
-    path: "/ws",
-    query: {
-      "access-token": token,
-    },
-  });
-  WebSocketInit(socket);
-}
+// function creatWebsocket(token) {
+//   console.log('CREAT WEBSOCKET', token)
+//   const that = this
+//   var ws = new WebSocket({
+//     url: 'wss://api.huloot.io',
+//     // url: "ws://127.0.0.1:6088",
+//     path: '/ws',
+//     header: {
+//       'access-token': token
+//     }
+//   })
+//   console.log(ws)
+//   ws.on('connect', function () {
+//     console.log('ws connect success')
+//     ws.off('connect')
+//   })
 
-function WebSocketInit(socket) {
-  let that = this;
-  this.ws = new WebSocket({
-    socket: socket,
-    url: "wss://api.huloot.io",
-    path: "/ws",
-    header: this.user.getHeader(),
-  });
+//   ws.on('error', function (e) {
+//     var msg = e.detail
+//     if (msg == 'authentication error') {
+//       // that.loading.end();
+//       // that.toast("login_failed");
+//     }
+//   })
 
-  this.ws.on("connect", function () {
-    game.method = "ws";
+//   ws.on('disconnect', function (e) {
+//     that.disconnectStatus = 1
+//     setTimeout(function () {
+//       if (that.disconnectStatus == 1) {
+//         that.disconnectStatus = 2
+//         // that.toast("error_disconnect", false);
+//       }
+//     }, 2000)
+//   })
 
-    console.log("ws connect success");
-    that.ws.off("connect");
+//   ws.on('reconnect', function (e) {
+//     if (that.disconnectStatus == 2) {
+//       // that.toast("reconnect");
+//       // that.stableScene.onRefresh(true);
+//     }
+//     that.disconnectStatus = 0
+//   })
 
-    that.ws.onBroadcase("news", function (data) {
-      that.newsComponent.pushMsg(data);
-    });
-
-    that.load(res, action);
-  });
-
-  this.ws.on("error", function (e) {
-    var msg = e.detail;
-    if (msg == "authentication error") {
-      that.loading.end();
-      that.toast("login_failed");
-    }
-  });
-
-  this.ws.on("disconnect", function (e) {
-    that.disconnectStatus = 1;
-    setTimeout(function () {
-      if (that.disconnectStatus == 1) {
-        that.disconnectStatus = 2;
-        that.toast("error_disconnect", false);
-      }
-    }, 2000);
-  });
-
-  this.ws.on("reconnect", function (e) {
-    if (that.disconnectStatus == 2) {
-      that.toast("reconnect");
-      that.stableScene.onRefresh(true);
-    }
-    that.disconnectStatus = 0;
-  });
-
-  this.ws.load();
-}
-
-
+//   ws.load()
+// }

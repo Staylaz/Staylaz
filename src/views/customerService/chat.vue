@@ -224,8 +224,9 @@ export default {
     },
 
     sendMessage() {
+      let that = this;
       this.$parent.sendMessage(this.textarea, () => {
-        this.textarea = null;
+        that.textarea = '';
       });
     },
 

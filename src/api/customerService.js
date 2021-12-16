@@ -1,10 +1,11 @@
 import request from '@/utils/request'
 
 export function getChat() {
-  return request({
-    url: '/telegram/chat',
-    method: 'post'
-  })
+  // this.$store.dispatch('getChat');
+  // return request({
+  //   url: '/telegram/chat',
+  //   method: 'post'
+  // })
 }
 
 export function getChatRecord(data) {
