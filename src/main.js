@@ -19,7 +19,7 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
-
+import '@/websocket/websocket' // 全局引入 WebSocket 通讯组件
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

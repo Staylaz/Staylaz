@@ -66,7 +66,7 @@
         </div>
 
         <div class="status-box">
-          <p class="time">{{ item.timestamp | timestampFilter }}</p>
+          <p class="time">{{ timestampTo12Hour(item.timestamp) }}</p>
           <div v-show="item.number && !isBatchSelect" class="unread">
             {{ item.number }}
           </div>
@@ -82,6 +82,7 @@
 <script>
 // API
 import { getChat } from '@/api/customerService'
+import timestampTo12Hour from "@/utils/utils";
 export default {
   name: 'Contract',
 
@@ -128,7 +129,11 @@ export default {
 
     switchChat(id) {
       this.$parent.getChatRecord(id)
-    }
+    },
+
+     timestampTo12Hour(timestamp) {
+     return timestampTo12Hour(timestamp);
+    },
   }
 }
 </script>
