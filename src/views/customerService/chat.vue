@@ -53,7 +53,7 @@
             class="button-new-tag"
             size="mini"
             @click="showInput"
-          >+ New Tag
+            >+ New Tag
           </el-button>
         </div>
       </div>
@@ -73,12 +73,12 @@
                 v-if="item.senderid !== item.userid"
                 src="https://hbimg.huabanimg.com/3f2935be7c51fd34d37d6aa4c83f0f0ad81a1eb4d0e0-Wg4Qpa_fw1200"
                 alt=""
-              >
+              />
               <img
                 v-else
                 src="https://hbimg.huabanimg.com/ede884350cc5d6825f786a6bd8addc5383e11e749dd0-bqteB7_fw1200"
                 alt=""
-              >
+              />
             </div>
 
             <div class="message-content">
@@ -94,7 +94,9 @@
                   ]"
                 >
                 </el-image> -->
-                <span class="time">10:00 PM</span>
+                <span class="time">{{
+                  timestampTo12Hour(item.timestamp)
+                }}</span>
               </p>
             </div>
           </div>
@@ -122,7 +124,7 @@
                     src="../../assets/svg/emoticons.svg"
                     alt=""
                     class="nav-icon"
-                  >
+                  />
                   <VEmojiPicker v-show="1" @select="selectEmoji" />
                 </el-tab-pane>
                 <el-tab-pane>
@@ -131,14 +133,14 @@
                     class="nav-icon"
                     src="../../assets/svg/sticker.svg"
                     alt=""
-                  >
+                  />
                 </el-tab-pane>
               </el-tabs>
             </div>
-            <img slot="reference" src="../../assets/svg/emoticons.svg" alt="">
+            <img slot="reference" src="../../assets/svg/emoticons.svg" alt="" />
           </el-popover>
-          <img src="../../assets/svg/document.svg" alt="">
-          <img src="../../assets/svg/picture.svg" alt="">
+          <img src="../../assets/svg/document.svg" alt="" />
+          <img src="../../assets/svg/picture.svg" alt="" />
         </div>
         <el-input
           v-model="textarea"
@@ -158,52 +160,53 @@
 </template>
 
 <script>
-import { VEmojiPicker } from 'v-emoji-picker'
+import { VEmojiPicker } from "v-emoji-picker";
+import timestampTo12Hour from "@/utils/utils";
 
 export default {
-  name: 'Contract',
+  name: "Contract",
   components: {
-    VEmojiPicker
+    VEmojiPicker,
   },
 
   data() {
     return {
       userTags: [],
       inputVisible: false,
-      inputValue: '',
-      textarea: '',
-      chatModel: 'private', // batchSending，
+      inputValue: "",
+      textarea: "",
+      chatModel: "private", // batchSending，
       srcList: [
-        'https://hbimg.huabanimg.com/a939f3ff0d6945d6f6736d08ddde7518bc5b2bc51a6dc-34dwbk'
+        "https://hbimg.huabanimg.com/a939f3ff0d6945d6f6736d08ddde7518bc5b2bc51a6dc-34dwbk",
       ],
-      emoticonsPopoverVisible: false
+      emoticonsPopoverVisible: false,
       // activeUserID:$parent.activeUserID,
-    }
+    };
   },
 
   methods: {
     toggleBatchChat() {
-      this.$store.dispatch('app/toggleSideBar') // TODO
+      this.$store.dispatch("app/toggleSideBar"); // TODO
     },
 
     handleClose(tag) {
-      this.userTags.splice(this.userTags.indexOf(tag), 1)
+      this.userTags.splice(this.userTags.indexOf(tag), 1);
     },
 
     showInput() {
-      this.inputVisible = true
+      this.inputVisible = true;
       this.$nextTick((_) => {
-        this.$refs.saveTagInput.$refs.input.focus()
-      })
+        this.$refs.saveTagInput.$refs.input.focus();
+      });
     },
 
     handleInputConfirm() {
-      const inputValue = this.inputValue
+      const inputValue = this.inputValue;
       if (inputValue) {
-        this.userTags.push(inputValue)
+        this.userTags.push(inputValue);
       }
-      this.inputVisible = false
-      this.inputValue = ''
+      this.inputVisible = false;
+      this.inputValue = "";
     },
 
     onInput(event) {
@@ -211,22 +214,26 @@ export default {
     },
 
     clearTextarea() {
-      this.$refs.emoji.clear()
+      this.$refs.emoji.clear();
     },
 
     selectEmoji(emoji) {
-      this.textarea = this.textarea + emoji['data']
-      this.emoticonsPopoverVisible = false
-      console.log(this.textarea)
+      this.textarea = this.textarea + emoji["data"];
+      this.emoticonsPopoverVisible = false;
+      console.log(this.textarea);
     },
 
     sendMessage() {
       this.$parent.sendMessage(this.textarea, () => {
-        this.textarea = null
-      })
-    }
-  }
-}
+        this.textarea = null;
+      });
+    },
+
+    timestampTo12Hour(timestamp) {
+     return timestampTo12Hour(timestamp);
+    },
+  },
+};
 </script>
 
 <style lang='scss' scoped>

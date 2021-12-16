@@ -6,6 +6,10 @@
 
 <script>
 export default {
-  name: 'App'
+  created() {},
+  methods: {}
 }
 </script>
+
+<style lang="scss"></style>
+

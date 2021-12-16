@@ -118,7 +118,6 @@ export default {
     sendMessage(message, cb) {
       sendMessage({ userid: this.activeUserID + '', message: message })
         .then((response) => {
-          console.log(response, '=========')
           this.getChatRecord(this.activeUserID)
           cb()
         })
@@ -126,6 +125,8 @@ export default {
           console.log(err)
         })
     }
+
+    
   }
 }
 </script>
