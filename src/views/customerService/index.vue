@@ -44,8 +44,8 @@
     </div>
 
     <div class="customer-service-container">
-      <contract-people-container />
-      <chat-container />
+      <contract-people-container ref="contractPeople"/>
+      <chat-container  ref="chat"/>
       <!-- <batch-chat-container></batch-chat-container> -->
       <resource-library-container />
     </div>
@@ -61,8 +61,6 @@ import ChatContainer from "./chat.vue";
 import BatchChatContainer from "./batchChat.vue";
 import ResourceLibraryContainer from "./resourceLibrary.vue";
 
-// API
-import { getChat, getChatRecord, sendMessage } from "@/api/customerService";
 
 export default {
   name: "Theme",
@@ -76,14 +74,15 @@ export default {
     return {
       contactType: "stranger",
       tags: ["activity1", "activity2", "activity3", "activity4"],
-
       activeUserID: null,
       chatRecord: [],
       ws: this.$store.state.socket.ws,
     };
   },
   watch: {},
-  created() {},
+  created() {
+    this.onSocketMessage()
+  },
   methods: {
     handleContactType(type) {
       this.contactType = type;
@@ -100,11 +99,13 @@ export default {
             userid: id,
           },
           function (code, msg, data) {
-            console.log(code, msg, data);
+            console.log("message",data);
             that.chatRecord = data.messages;
+            that.$refs.chat.scrollToBottom();
             that.chatRecord.sort((a, b) => {
               return a.mid - b.mid <= 0 ? -1 : 1;
             });
+
           }
         )
         .catch((err) => {
@@ -128,6 +129,18 @@ export default {
           }
         );
     },
+
+
+    onSocketMessage(){
+      this.ws.onBroadcast('message',(res)=>{
+        let id = res['message']['userid'];
+        if (id === this.activeUserID) {
+          this.getChatRecord(this.activeUserID);
+        } 
+        this.$refs.contractPeople.getChatRecord()
+
+      })
+    }
   },
 };
 </script>

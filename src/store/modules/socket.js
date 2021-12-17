@@ -1,25 +1,3 @@
-// import Vue from 'vue'
-// import Vuex from 'vuex'
-
-// Vue.use(Vuex)
-
-// export default new Vuex.Store({
-//   state: {
-
-//   },
-//   getters: {
-//     // 获取接收的信息
-//     socketMsgs: state => {
-//       return state.msg
-//     }
-//   },
-//   mutations: {
-
-//   },
-//   actions: {
-
-//   }
-// })
 import WebSocket from "@/utils/websocket";
 
 const state = {
@@ -32,13 +10,9 @@ const state = {
   msg: null //接收到的信息
 }
 const mutations = {
-
-  //初始化ws 用户登录后调用
   webSocketInit(state, info) {
     
-    let that = this
-    //this 创建一个state.ws对象【发送、接收、关闭socket都由这个对象操作】
-    console.log(process,'-==============================',process.env.VUE_APP_WEBSOCKET_URL,)
+    let that = this;
     state.ws = new WebSocket(
      {
         url: process.env.VUE_APP_WEBSOCKET_URL,
@@ -75,6 +49,11 @@ const mutations = {
       that.commit('reconnect');
     }
 
+    // state.ws.onBroadcast = function (res) {
+    //   console.log("onBroadcast...");
+    //   console.log(res) //TODO
+    // }
+
     state.ws.load()
   },
   reconnect(state) {
@@ -94,23 +73,18 @@ const mutations = {
     }, 5000);
   },
   reset(state) {
-    //重置心跳
     let that = this;
-    //清除时间
     clearTimeout(state.timeoutObj);
     clearTimeout(state.serverTimeoutObj);
-    //重启心跳
     that.commit('start')
   },
   start(state) {
-    //开启心跳
     var self = this;
     state.timeoutObj &&
       clearTimeout(state.timeoutObj);
     state.serverTimeoutObj &&
       clearTimeout(state.serverTimeoutObj);
     state.timeoutObj = setTimeout(() => {
-      //这里发送一个心跳，后端收到后，返回一个心跳消息，
       if (state.ws.readyState === 1) {
         //如果连接正常
         state.ws.send("heartCheck");
@@ -133,9 +107,10 @@ const actions = {
     commit
   }, p) {
     commit('webSocketSend', p)
-  },
- 
+  }, 
 }
+
+
 export default {
   namespaced: true,
   state,

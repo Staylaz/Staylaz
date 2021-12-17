@@ -45,6 +45,8 @@ class WebSocket {
       console.log('you have been disconnected')
       that.onDisconnect()
     })
+
+
   }
 
   close() {
@@ -61,10 +63,16 @@ class WebSocket {
   }
 
   onBroadcase(type, cb) {
-    console.log('onBroadcase', type)
-    this.socket.on(type, function (data) {
-      console.log('onBroadcase', type, data)
-      cb(data)
+    
+  }
+
+  onBroadcast(type, cb) {
+    this.socket.on('broadcast', function (data) {
+      data = JSON.parse(data)
+      console.log("this.socket.on('broadcast'",data,data.action === type,data.data)
+      if (data.action === type) {
+        typeof cb === 'function' && cb(data.data)
+      }
     })
   }
 
@@ -99,7 +107,3 @@ class WebSocket {
 
 export default WebSocket;
 // export default WebSocket;
-
-
-
-

@@ -60,7 +60,7 @@
     </div>
 
     <div class="chat-box">
-      <div class="chat-content">
+      <div class="chat-content" ref="chatMain">
         <div class="chat-record-list">
           <div
             v-for="(item, index) in $parent.chatRecord"
@@ -184,6 +184,10 @@ export default {
     };
   },
 
+  mounted() {
+    this.scrollToBottom();
+  },
+
   methods: {
     toggleBatchChat() {
       this.$store.dispatch("app/toggleSideBar"); // TODO
@@ -226,12 +230,23 @@ export default {
     sendMessage() {
       let that = this;
       this.$parent.sendMessage(this.textarea, () => {
-        that.textarea = '';
+        that.textarea = "";
       });
     },
 
     timestampTo12Hour(timestamp) {
-     return timestampTo12Hour(timestamp);
+      return timestampTo12Hour(timestamp);
+    },
+
+    scrollToBottom() {
+      this.$nextTick(() => {
+        this.$refs.chatMain.scrollTop = this.$refs.chatMain.scrollHeight;
+      });
+      window.onresize = () => {
+        this.$nextTick(() => {
+          this.$refs.chatMain.scrollTop = this.$refs.chatMain.scrollHeight;
+        });
+      };
     },
   },
 };
@@ -339,6 +354,7 @@ export default {
       box-sizing: border-box;
       padding: 0 16px;
       overflow-y: auto;
+      // background-color: rgb(165, 45, 45);
       .chat-record-list {
         width: 100%;
         padding-bottom: 30px;

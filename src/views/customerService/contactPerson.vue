@@ -87,8 +87,6 @@
 </template>
 
 <script>
-// API
-import { getChat } from "@/api/customerService";
 import timestampTo12Hour from "@/utils/utils";
 export default {
   name: "Contract",
@@ -126,22 +124,23 @@ export default {
   methods: {
     getChatData() {
       let that = this;
-      this.ws.emit(
-        "telegram",
-        {
-          action: "chat",
-        },
-        function (code,msg,data) {
-          that.chatUsersData = data.users;
-          if (!that.$parent.activeUserID) {
-            that.switchChat(data.users[0]["userid"]);
+      this.ws
+        .emit(
+          "telegram",
+          {
+            action: "chat",
+          },
+          function (code, msg, data) {
+            console.log("UPDATE USERS", data);
+            that.chatUsersData = data.users;
+            if (!that.$parent.activeUserID) {
+              that.switchChat(data.users[0]["userid"]);
+            }
           }
-        }
-      ).catch((err) => {
+        )
+        .catch((err) => {
           console.log(err);
         });
-     
-  
     },
 
     switchChat(id) {
@@ -153,7 +152,6 @@ export default {
     },
 
     searchContractPeopleFilter(item) {
-      console.log(item, "==========", item.id);
       if (!this.searchContractPeople) {
         return true;
       } else {
@@ -161,6 +159,7 @@ export default {
         // if (this.searchContractPeopleValue )
       }
     },
+
   },
 };
 </script>
@@ -302,3 +301,4 @@ export default {
   }
 }
 </style>
+
