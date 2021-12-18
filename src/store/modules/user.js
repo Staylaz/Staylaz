@@ -12,8 +12,6 @@ import router, {
   resetRouter
 } from '@/router'
 
-import WebSocket from '@/utils/websocket'
-
 const state = {
   token: getToken(),
   name: '',
@@ -82,7 +80,9 @@ const actions = {
         }
 
         try {
-          creatWebsocket(state.token)
+          // creatWebsocket(state.token)
+          this.dispatch('socket/webSocketInit',{token:state.token})
+          console.log('_____________________________________')
         } catch (err) {
           console.log(err)
         }
@@ -186,48 +186,48 @@ export default {
   actions
 }
 
-function creatWebsocket(token) {
-  console.log('CREAT WEBSOCKET', token)
-  const that = this
-  var ws = new WebSocket({
-    url: 'wss://api.huloot.io',
-    // url: "ws://127.0.0.1:6088",
-    path: '/ws',
-    header: {
-      'access-token': token
-    }
-  })
-  console.log(ws)
-  ws.on('connect', function() {
-    console.log('ws connect success')
-    ws.off('connect')
-  })
+// function creatWebsocket(token) {
+//   console.log('CREAT WEBSOCKET', token)
+//   const that = this
+//   var ws = new WebSocket({
+//     url: 'wss://api.huloot.io',
+//     // url: "ws://127.0.0.1:6088",
+//     path: '/ws',
+//     header: {
+//       'access-token': token
+//     }
+//   })
+//   console.log(ws)
+//   ws.on('connect', function () {
+//     console.log('ws connect success')
+//     ws.off('connect')
+//   })
 
-  ws.on('error', function(e) {
-    var msg = e.detail
-    if (msg == 'authentication error') {
-      // that.loading.end();
-      // that.toast("login_failed");
-    }
-  })
+//   ws.on('error', function (e) {
+//     var msg = e.detail
+//     if (msg == 'authentication error') {
+//       // that.loading.end();
+//       // that.toast("login_failed");
+//     }
+//   })
 
-  ws.on('disconnect', function(e) {
-    that.disconnectStatus = 1
-    setTimeout(function() {
-      if (that.disconnectStatus == 1) {
-        that.disconnectStatus = 2
-        // that.toast("error_disconnect", false);
-      }
-    }, 2000)
-  })
+//   ws.on('disconnect', function (e) {
+//     that.disconnectStatus = 1
+//     setTimeout(function () {
+//       if (that.disconnectStatus == 1) {
+//         that.disconnectStatus = 2
+//         // that.toast("error_disconnect", false);
+//       }
+//     }, 2000)
+//   })
 
-  ws.on('reconnect', function(e) {
-    if (that.disconnectStatus == 2) {
-      // that.toast("reconnect");
-      // that.stableScene.onRefresh(true);
-    }
-    that.disconnectStatus = 0
-  })
+//   ws.on('reconnect', function (e) {
+//     if (that.disconnectStatus == 2) {
+//       // that.toast("reconnect");
+//       // that.stableScene.onRefresh(true);
+//     }
+//     that.disconnectStatus = 0
+//   })
 
-  ws.load()
-}
+//   ws.load()
+// }

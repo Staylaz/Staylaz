@@ -44,8 +44,8 @@
     </div>
 
     <div class="customer-service-container">
-      <contract-people-container />
-      <chat-container :chat-users-data="chatUsersData" />
+      <contract-people-container ref="contractPeople"/>
+      <chat-container  ref="chat"/>
       <!-- <batch-chat-container></batch-chat-container> -->
       <resource-library-container />
     </div>
@@ -54,81 +54,95 @@
 
 <script>
 // import { toggleClass } from '@/utils'
-import '@/assets/custom-theme/index.css' // the theme changed version element-ui css
+import "@/assets/custom-theme/index.css"; // the theme changed version element-ui css
 // Vue Components
-import ContractPeopleContainer from './contactPerson.vue'
-import ChatContainer from './chat.vue'
-import BatchChatContainer from './batchChat.vue'
-import ResourceLibraryContainer from './resourceLibrary.vue'
+import ContractPeopleContainer from "./contactPerson.vue";
+import ChatContainer from "./chat.vue";
+import BatchChatContainer from "./batchChat.vue";
+import ResourceLibraryContainer from "./resourceLibrary.vue";
 
-// API
-import { getChat, getChatRecord, sendMessage } from '@/api/customerService'
 
 export default {
-  name: 'Theme',
+  name: "Theme",
   components: {
     ContractPeopleContainer,
     ChatContainer,
     BatchChatContainer,
-    ResourceLibraryContainer
+    ResourceLibraryContainer,
   },
   data() {
     return {
-      contactType: 'stranger',
-      tags: ['activity1', 'activity2', 'activity3', 'activity4'],
-      chatUsersData: [],
+      contactType: "stranger",
+      tags: ["activity1", "activity2", "activity3", "activity4"],
       activeUserID: null,
-      chatRecord: []
-    }
+      chatRecord: [],
+      ws: this.$store.state.socket.ws,
+    };
   },
   watch: {},
   created() {
-    this.getChatData()
+    this.onSocketMessage()
   },
   methods: {
     handleContactType(type) {
-      this.contactType = type
-    },
-
-    getChatData() {
-      getChat()
-        .then((response) => {
-          this.chatUsersData = response.data.users
-        })
-        .catch((err) => {
-          console.log(err)
-        })
+      this.contactType = type;
     },
 
     getChatRecord(id) {
-      this.activeUserID = id
-      getChatRecord({ userid: '' + id })
-        .then((response) => {
-          console.log(response, '=========')
-          this.chatRecord = response.data.messages
-          this.chatRecord.sort((a, b) => {
-            return a.mid - b.mid <= 0 ? -1 : 1
-          })
-        })
+      this.activeUserID = id;
+      let that = this;
+      this.ws
+        .emit(
+          "telegram",
+          {
+            action: "message",
+            userid: id,
+          },
+          function (code, msg, data) {
+            console.log("message",data);
+            that.chatRecord = data.messages;
+            that.$refs.chat.scrollToBottom();
+            that.chatRecord.sort((a, b) => {
+              return a.mid - b.mid <= 0 ? -1 : 1;
+            });
+
+          }
+        )
         .catch((err) => {
-          console.log(err)
-        })
+          console.log(err);
+        });
     },
 
     sendMessage(message, cb) {
-      sendMessage({ userid: this.activeUserID + '', message: message })
-        .then((response) => {
-          this.getChatRecord(this.activeUserID)
-          cb()
-        })
-        .catch((err) => {
-          console.log(err)
-        })
-    }
+      let that = this;
+      this.ws
+        .emit(
+          "telegram",
+          {
+            action: "send",
+            userid: this.activeUserID,
+            message: message,
+          },
+          function (code, msg, data) {
+            cb();
+            that.getChatRecord(that.activeUserID);
+          }
+        );
+    },
 
-    
-  }
-}
+
+    onSocketMessage(){
+      this.ws.onBroadcast('message',(res)=>{
+        let id = res['message']['userid'];
+        if (id === this.activeUserID) {
+          this.getChatRecord(this.activeUserID);
+        } 
+        this.$refs.contractPeople.getChatRecord()
+
+      })
+    }
+  },
+};
 </script>
 
 <style lang="scss" scoped>
