@@ -1,79 +1,79 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import Vue from "vue";
+import Router from "vue-router";
 
-Vue.use(Router)
+Vue.use(Router);
 
 /* Layout */
-import Layout from '@/layout'
+import Layout from "@/layout";
 
 export const constantRoutes = [
   {
-    path: '/redirect',
+    path: "/redirect",
     component: Layout,
     hidden: true,
     children: [
       {
-        path: '/redirect/:path(.*)',
-        component: () => import('@/views/redirect/index')
-      }
-    ]
+        path: "/redirect/:path(.*)",
+        component: () => import("@/views/redirect/index"),
+      },
+    ],
   },
   {
-    path: '/login',
-    component: () => import('@/views/login/index'),
-    hidden: true
+    path: "/login",
+    component: () => import("@/views/login/index"),
+    hidden: true,
   },
   {
-    path: '/auth-redirect',
-    component: () => import('@/views/login/auth-redirect'),
-    hidden: true
+    path: "/auth-redirect",
+    component: () => import("@/views/login/auth-redirect"),
+    hidden: true,
   },
   {
-    path: '/404',
-    component: () => import('@/views/error-page/404'),
-    hidden: true
+    path: "/404",
+    component: () => import("@/views/error-page/404"),
+    hidden: true,
   },
   {
-    path: '/401',
-    component: () => import('@/views/error-page/401'),
-    hidden: true
+    path: "/401",
+    component: () => import("@/views/error-page/401"),
+    hidden: true,
   },
   {
-    path: '/',
+    path: "/",
     component: Layout,
-    redirect: '/dashboard',
+    redirect: "/dashboard",
     children: [
       {
-        path: 'dashboard',
-        component: () => import('@/views/dashboard/index'),
-        name: 'Dashboard',
+        path: "dashboard",
+        component: () => import("@/views/dashboard/index"),
+        name: "Dashboard",
         meta: {
-          title: 'Dashboard',
-          icon: 'dashboard',
-          affix: true
-        }
-      }
-    ]
+          title: "Dashboard",
+          icon: "dashboard",
+          affix: true,
+        },
+      },
+    ],
   },
   {
-    path: '/profile',
+    path: "/profile",
     component: Layout,
-    redirect: '/profile/index',
+    redirect: "/profile/index",
     hidden: true,
     children: [
       {
-        path: 'index',
-        component: () => import('@/views/profile/index'),
-        name: 'Profile',
+        path: "index",
+        component: () => import("@/views/profile/index"),
+        name: "Profile",
         meta: {
-          title: 'Profile',
-          icon: 'user',
-          noCache: true
-        }
-      }
-    ]
-  }
-]
+          title: "Profile",
+          icon: "user",
+          noCache: true,
+        },
+      },
+    ],
+  },
+];
 
 /**
  * asyncRoutes
@@ -81,45 +81,45 @@ export const constantRoutes = [
  */
 export const asyncRoutes = [
   {
-    path: '/permission',
+    path: "/permission",
     component: Layout,
-    redirect: '/permission/page',
+    redirect: "/permission/page",
     alwaysShow: true, // will always show the root menu
-    name: 'Permission',
+    name: "Permission",
     meta: {
-      title: 'Permission',
-      icon: 'lock',
-      roles: ['admin', 'editor'] // you can set roles in root nav
+      title: "Permission",
+      icon: "lock",
+      roles: ["admin", "editor"], // you can set roles in root nav
     },
     children: [
       {
-        path: 'page',
-        component: () => import('@/views/permission/page'),
-        name: 'PagePermission',
+        path: "page",
+        component: () => import("@/views/permission/page"),
+        name: "PagePermission",
         meta: {
-          title: 'Page Permission',
-          roles: ['admin'] // or you can only set roles in sub nav
-        }
+          title: "Page Permission",
+          roles: ["admin"], // or you can only set roles in sub nav
+        },
       },
       {
-        path: 'directive',
-        component: () => import('@/views/permission/directive'),
-        name: 'DirectivePermission',
+        path: "directive",
+        component: () => import("@/views/permission/directive"),
+        name: "DirectivePermission",
         meta: {
-          title: 'Directive Permission'
+          title: "Directive Permission",
           // if do not set roles, means: this page does not require permission
-        }
+        },
       },
       {
-        path: 'role',
-        component: () => import('@/views/permission/role'),
-        name: 'RolePermission',
+        path: "role",
+        component: () => import("@/views/permission/role"),
+        name: "RolePermission",
         meta: {
-          title: 'Role Permission',
-          roles: ['admin']
-        }
-      }
-    ]
+          title: "Role Permission",
+          roles: ["admin"],
+        },
+      },
+    ],
   },
 
   // {
@@ -148,50 +148,76 @@ export const asyncRoutes = [
   // },
 
   {
-    path: '/customerService',
+    path: "/customerService",
     component: Layout,
     children: [
       {
-        path: 'index',
-        component: () => import('@/views/customerService/index'),
-        name: 'customerService',
+        path: "index",
+        component: () => import("@/views/customerService/index"),
+        name: "customerService",
         meta: {
-          title: 'Customer Service',
-          icon: 'people'
-        }
-      }
-    ]
+          title: "Customer Service",
+          icon: "people",
+        },
+      },
+    ],
   },
 
   {
-    path: '/customerProfile',
+    path: "/customerProfile",
     component: Layout,
     children: [
       {
-        path: 'index',
-        component: () => import('@/views/customerProfile/index'),
-        name: 'customerProfile',
+        path: "index",
+        component: () => import("@/views/customerProfile/index"),
+        name: "customerProfile",
         meta: {
-          title: 'Customer Profile',
-          icon: 'el-icon-s-order'
-        }
-      }
-    ]
+          title: "Customer Profile",
+          icon: "el-icon-s-order",
+        },
+      },
+    ],
   },
   {
-    path: '/token',
+    path: "/token",
     component: Layout,
+    redirect: "/token/index",
+    alwaysShow: true,
+    name: "Token",
+    meta: {
+      title: "Token Overview",
+      icon: "el-icon-wallet",
+      roles: ["admin", "editor"], // you can set roles in root nav
+    },
     children: [
       {
-        path: 'index',
-        component: () => import('@/views/token/index'),
-        name: 'Token Data',
+        path: "index",
+        component: () => import("@/views/token/index"),
+        name: "Token Data",
         meta: {
-          title: 'Token Data',
-          icon: 'data'
-        }
-      }
-    ]
+          title: "Token Data",
+          icon: "el-icon-s-marketing",
+        },
+      },
+      {
+        path: "usertoken",
+        component: () => import("@/views/token/usertoken"),
+        name: "User Token",
+        meta: {
+          title: "User Token",
+          icon: "el-icon-s-data",
+        },
+      },
+      {
+        path: "bill/:address",
+        component: () => import("@/views/token/billlist"),
+        name: "Bill",
+        meta: {
+          title: "Swap Bill",
+          icon: "el-icon-s-custom",
+        },
+      },
+    ],
   },
   // {
   //   path: '/zip',
@@ -268,27 +294,27 @@ export const asyncRoutes = [
 
   // 404 page must be placed at the end !!!
   {
-    path: '*',
-    redirect: '/404',
-    hidden: true
-  }
-]
+    path: "*",
+    redirect: "/404",
+    hidden: true,
+  },
+];
 
 const createRouter = () =>
   new Router({
     // mode: 'history', // require service support
     scrollBehavior: () => ({
-      y: 0
+      y: 0,
     }),
-    routes: constantRoutes
-  })
+    routes: constantRoutes,
+  });
 
-const router = createRouter()
+const router = createRouter();
 
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
 export function resetRouter() {
-  const newRouter = createRouter()
-  router.matcher = newRouter.matcher // reset router
+  const newRouter = createRouter();
+  router.matcher = newRouter.matcher; // reset router
 }
 
-export default router
+export default router;
