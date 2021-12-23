@@ -3,25 +3,28 @@
     <div class="top-bar">
       <div v-show="!searchContractPeople">
         <span>
-          <span v-show="!isBatchSelect" @click="isBatchSelect = true"
+          <span
+            v-show="!$parent.batchChatType"
+            @click="$parent.batchChatType = true"
             >Batch</span
           >
           <span
-            v-show="isBatchSelect"
+            v-show="$parent.batchChatType"
             class="cancel-span"
-            @click="isBatchSelect = false"
+            @click="$parent.batchChatType = false"
             >Cancel</span
           >
         </span>
 
         <el-checkbox
-          v-show="!isBatchSelect"
+          v-show="!$parent.batchChatType"
           label="Unread"
           name="type"
-        ></el-checkbox>
+          v-model="isUnreadType"
+        />
 
         <!-- <el-radio-group
-          
+
           v-model="contactType"
           class="contactTypeRadio"
         >
@@ -29,7 +32,7 @@
         </el-radio-group> -->
 
         <svg-icon
-          v-show="!isBatchSelect"
+          v-show="!$parent.batchChatType"
           icon-class="search"
           @click="searchContractPeople = true"
         />
@@ -55,30 +58,49 @@
     <div class="contract-people-list">
       <div
         v-for="(item, index) in chatUsersData"
+        v-show="contractPeopleFilter(item)"
         :key="index"
         class="people-item"
         :class="{ 'is-active': item.userid === $parent.activeUserID }"
-        @click="switchChat(item.userid)"
-        v-show="searchContractPeopleFilter(item)"
+        @click="switchChat(item)"
       >
         <div class="head-img">
-          <img
-            src="https://hbimg.huabanimg.com/32f39125c45f42f2f9c378435c93525832663d6311d6ea-09TUBd"
-            alt=""
-          />
+          <img v-if="item['photo']" :src="item['photo']" alt="" />
+
+          <div class="name-abb" :style="item['bgcolor']" v-else>
+            <span v-if="item['user']['firstname']">{{
+              item["user"]["firstname"][0]
+            }}</span>
+            <span v-if="item['user']['lastname']">
+              {{ item["user"]["lastname"][0] }}</span
+            >
+          </div>
         </div>
         <div class="info-box">
-          <p class="id">{{ item.userid }}</p>
-          <p class="message">...</p>
+          <p class="name-box">
+            <span class="id">{{ item.userid }}</span>
+          </p>
+          <p class="message">{{ filterTag }}</p>
         </div>
 
         <div class="status-box">
           <p class="time">{{ timestampTo12Hour(item.timestamp) }}</p>
-          <div v-show="item.number && !isBatchSelect" class="unread">
+          <div v-show="item.number && !$parent.batchChatType" class="unread">
             <span> {{ item.number }}</span>
           </div>
-          <div v-show="isBatchSelect" class="batch-select is-select">
-            <img src="../../assets/svg/select.svg" alt="" />
+          <div
+            v-show="$parent.batchChatType"
+            class="batch-select"
+            :class="{
+              'is-select': $parent.batchUsersId.indexOf(item.userid) > -1,
+            }"
+            @click="$parent.switchActiveBacth(item.userid)"
+          >
+            <img
+              src="../../assets/svg/select.svg"
+              alt=""
+              v-show="$parent.batchUsersId.indexOf(item.userid) > -1"
+            />
           </div>
         </div>
       </div>
@@ -88,9 +110,14 @@
 
 <script>
 import timestampTo12Hour from "@/utils/utils";
+import { getUserHeadImg } from "@/api/user";
+// import user from 'mock/user';
+
 export default {
   name: "Contract",
-
+  props: {
+    filtertagvalue: String,
+  },
   filters: {
     timestampFilter(time) {
       const _data = new Date(parseInt(time) * 1000)
@@ -106,14 +133,15 @@ export default {
       return _data.substring(13) + apn;
     },
   },
+
   data() {
     return {
       activeContractIndex: 0,
       searchContractPeople: false,
       searchContractPeopleValue: "",
-      isBatchSelect: false,
       chatUsersData: [],
       ws: this.$store.state.socket.ws,
+      isUnreadType: false,
     };
   },
 
@@ -121,45 +149,104 @@ export default {
     this.getChatData();
   },
 
+  computed: {
+    filterTag() {
+      return this.filtertagvalue;
+    },
+  },
+
   methods: {
     getChatData() {
-      let that = this;
-      this.ws
-        .emit(
-          "telegram",
-          {
-            action: "chat",
-          },
-          function (code, msg, data) {
-            console.log("UPDATE USERS", data);
-            that.chatUsersData = data.users;
-            if (!that.$parent.activeUserID) {
-              that.switchChat(data.users[0]["userid"]);
-            }
+      const that = this;
+      that.$parent.batchUsersId = [];
+      this.ws.emit(
+        "telegram",
+        {
+          action: "chat",
+        },
+        function (code, msg, data) {
+          let _userData = [];
+          data.users.map((user) => {
+            user["bgcolor"] = that.randomRgb(user);
+            _userData.push(user);
+
+            // if (user.userid === 2) {
+            that.getUserHeadImg(user);
+            // }
+          });
+          that.chatUsersData = _userData;
+          if (!that.$parent.activeUserID) {
+            that.switchChat(data.users[0]);
           }
-        )
+          data.users.map((user) => {
+            that.$parent.batchUsersId.push(user.userid);
+            if (that.$parent.activeUserID === user.userid) {
+              that.switchChat(user);
+            }
+          });
+        }
+      );
+    },
+
+    getUserHeadImg(user) {
+      getUserHeadImg({ userid: user.userid })
+        .then((response) => {
+          user["photo"] = response["data"]["photo"];
+          // let _imageBuffer = response["data"]["photo"];
+          // let bytes = new Uint8Array(_imageBuffer["fileReference"]["data"]);
+          // let data = "";
+          // let len = bytes.byteLength;
+          // for (let i = 0; i < len; i++) {
+          //   data += String.fromCharCode(bytes[i]);
+          // }
+          // console.log("data:image/png;base64," + window.btoa(data));
+          // image.src = "data:image/png;base64," + window.btoa(data);
+          console.log(response["data"]["photo"], "+++++++");
+          // 'data:image/png;base64,' + window.btoa(
+          //   new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
+          // );
+        })
         .catch((err) => {
           console.log(err);
         });
     },
 
-    switchChat(id) {
-      this.$parent.getChatRecord(id);
+    switchChat(user) {
+      this.$parent.getChatRecord(user);
     },
 
     timestampTo12Hour(timestamp) {
       return timestampTo12Hour(timestamp);
     },
 
-    searchContractPeopleFilter(item) {
+    contractPeopleFilter(item) {
+      let _result = false;
       if (!this.searchContractPeople) {
-        return true;
+        _result = true;
+        if (this.filterTag) {
+          _result = item["user"]["tags"].indexOf(this.filterTag) > -1;
+        }
+        // if (this.isUnreadType) {
+        //   return item.number;
+        // }
       } else {
-        // item.userid
-        // if (this.searchContractPeopleValue )
+        _result = this.searchContractPeopleValue.indexOf(item.userid) > -1;
+         if (this.filterTag && _result) { 
+            _result = item["user"]["tags"].indexOf(this.filterTag) > -1;
+         }
       }
+
+      return _result;
     },
 
+    randomRgb(item) {
+      let R = Math.floor(Math.random() * 130 + 110);
+      let G = Math.floor(Math.random() * 130 + 110);
+      let B = Math.floor(Math.random() * 130 + 110);
+      return {
+        background: "rgb(" + R + "," + G + "," + B + ")",
+      };
+    },
   },
 };
 </script>
@@ -222,13 +309,25 @@ export default {
           top: 50%;
           transform: translate(-50%, -50%);
         }
+
+        .name-abb {
+          width: 44px;
+          height: 44px;
+          // background-color: rgb(172, 116, 116);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 22px;
+          font-weight: 800;
+          color: #fff;
+        }
       }
 
       .info-box {
         height: 36px;
         width: 50%;
         margin-left: 8px;
-        .id {
+        .name-box {
           line-height: 18px;
           margin: 0;
           margin-bottom: 4px;

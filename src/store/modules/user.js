@@ -82,7 +82,6 @@ const actions = {
         try {
           // creatWebsocket(state.token)
           this.dispatch('socket/webSocketInit',{token:state.token})
-          console.log('_____________________________________')
         } catch (err) {
           console.log(err)
         }

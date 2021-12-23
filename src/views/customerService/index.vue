@@ -12,17 +12,37 @@
           <el-radio-button label="stranger">Stranger</el-radio-button>
         </el-radio-group>
 
-        <el-dropdown trigger="click" size="mini">
+        <el-dropdown trigger="click" size="mini" v-if="0">
           <el-button type="common" size="mini">
             Filter by tag
             <i class="el-icon-caret-bottom el-icon--right" />
           </el-button>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item v-for="item of tags" :key="item" :command="item">
-              {{ item }}
+            <el-dropdown-item
+              v-for="item of alltags"
+              :key="item"
+              :command="item"
+            >
+              {{ item.desc }}
             </el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
+
+        <el-select
+          v-model="filterTagValue"
+          @clear="filterTagValue = ''"
+          clearable
+          class="select-filter"
+          placeholder="Filter by tag"
+          size="mini"
+        >
+          <el-option
+            v-for="item of alltags"
+            :key="item.id"
+            :label="item.desc"
+            :value="item.tag"
+          ></el-option>
+        </el-select>
       </div>
 
       <el-dropdown trigger="click">
@@ -38,17 +58,31 @@
               :command="item.value"
             >
               {{ item.label }}
+
             </el-dropdown-item> -->
         </el-dropdown-menu>
       </el-dropdown>
     </div>
 
     <div class="customer-service-container">
-      <contract-people-container ref="contractPeople"/>
-      <chat-container  ref="chat"/>
-      <!-- <batch-chat-container></batch-chat-container> -->
+      <contract-people-container
+        ref="contractPeople"
+        :filtertagvalue="filterTagValue"
+      />
+      <chat-container ref="chat" v-show="!batchChatType" />
+      <batch-chat-container v-show="batchChatType"></batch-chat-container>
       <resource-library-container />
     </div>
+
+    <!-- <el-dialog title="Batch" width="30%" center :modal='false' :visible.sync="batchChatType">
+      <span>需要注意的是内容是默认不居中的</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="centerDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="centerDialogVisible = false"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -60,7 +94,14 @@ import ContractPeopleContainer from "./contactPerson.vue";
 import ChatContainer from "./chat.vue";
 import BatchChatContainer from "./batchChat.vue";
 import ResourceLibraryContainer from "./resourceLibrary.vue";
-
+import TodoVue from "../dashboard/admin/components/TodoList/Todo.vue";
+import {
+  getUserTags,
+  addUserTag,
+  deleteUserTag,
+  addUserAddress,
+  deleteUserAddress,
+} from "@/api/user";
 
 export default {
   name: "Theme",
@@ -75,72 +116,152 @@ export default {
       contactType: "stranger",
       tags: ["activity1", "activity2", "activity3", "activity4"],
       activeUserID: null,
+      activeUser: null,
       chatRecord: [],
       ws: this.$store.state.socket.ws,
+      batchChatType: false,
+      batchUsersId: [],
+      alltags: [],
+      filterTagValue: "",
     };
   },
   watch: {},
   created() {
-    this.onSocketMessage()
+    this.onSocketMessage();
+    this.getUserTags();
   },
   methods: {
     handleContactType(type) {
       this.contactType = type;
     },
 
-    getChatRecord(id) {
-      this.activeUserID = id;
-      let that = this;
-      this.ws
-        .emit(
-          "telegram",
-          {
-            action: "message",
-            userid: id,
-          },
-          function (code, msg, data) {
-            console.log("message",data);
-            that.chatRecord = data.messages;
-            that.$refs.chat.scrollToBottom();
-            that.chatRecord.sort((a, b) => {
-              return a.mid - b.mid <= 0 ? -1 : 1;
-            });
+    switchActiveBacth(userid) {
+      let _index = this.batchUsersId.indexOf(userid);
+      if (_index < 0) {
+        this.batchUsersId.push(userid);
+      } else {
+        this.batchUsersId.splice(_index, 1);
+      }
+    },
 
-          }
-        )
-        .catch((err) => {
-          console.log(err);
-        });
+    getChatRecord(user) {
+      if (user) {
+        this.activeUser = user;
+        this.activeUserID = user.userid;
+      }
+
+      const that = this;
+      this.ws.emit(
+        "telegram",
+        {
+          action: "message",
+          userid: this.activeUserID,
+        },
+        function (code, msg, data) {
+          console.log("message", data);
+          that.chatRecord = data.messages;
+          that.$refs.chat.scrollToBottom();
+          that.chatRecord.sort((a, b) => {
+            return a.mid - b.mid <= 0 ? -1 : 1;
+          });
+        }
+      );
     },
 
     sendMessage(message, cb) {
-      let that = this;
-      this.ws
-        .emit(
+      const that = this;
+      console.log("SEND MESSAGE", this.activeUserID, message);
+      this.ws.emit(
+        "telegram",
+        {
+          action: "send",
+          userid: this.activeUserID,
+          message: message,
+        },
+        function (code, msg, data) {
+          cb();
+          // that.getChatRecord(null);
+        }
+      );
+    },
+
+    batchSendMessage(message, cb) {
+      let _num = 0;
+      let _faildUserid = [];
+      this.batchUsersId.map((id) => {
+        this.ws.emit(
           "telegram",
           {
             action: "send",
-            userid: this.activeUserID,
+            userid: id,
             message: message,
           },
-          function (code, msg, data) {
-            cb();
-            that.getChatRecord(that.activeUserID);
+          (code, msg, data) => {
+            console.log(code, msg, data, "BATCH");
+            _num++;
+            // if (msg !== "OK")
+            // if ()
+            //TODO
+            if (_num === this.batchUsersId.length) {
+              cb();
+              this.getChatRecord(null);
+            }
           }
         );
+      });
     },
 
-
-    onSocketMessage(){
-      this.ws.onBroadcast('message',(res)=>{
-        let id = res['message']['userid'];
+    onSocketMessage() {
+      this.ws.onBroadcast("message", (res) => {
+        const id = res["message"]["userid"];
         if (id === this.activeUserID) {
-          this.getChatRecord(this.activeUserID);
-        } 
-        this.$refs.contractPeople.getChatRecord()
+          this.getChatRecord(null);
+        }
+        this.$refs.contractPeople.getChatData();
+      });
+    },
 
-      })
-    }
+    addUserTag(tags, cb) {
+      tags.forEach((tag) => {
+        addUserTag({ userid: this.activeUserID, tag: tag }).then((response) => {
+          cb();
+          this.$refs.contractPeople.getChatData();
+        });
+      });
+    },
+
+    delUserTag(tag, cb) {
+      console.log(tag, "delUserTag");
+      deleteUserTag({ userid: this.activeUserID, tag: tag }).then(
+        (response) => {
+          cb();
+          this.$refs.contractPeople.getChatData();
+        }
+      );
+    },
+
+    getUserTags() {
+      getUserTags().then((response) => {
+        this.alltags = response.data.tags;
+      });
+    },
+
+    delUserAddress(address) {
+       deleteUserAddress({ userid: this.activeUserID, address: address }).then(
+        (response) => {
+          this.$refs.contractPeople.getChatData();
+        }
+      );
+    },
+
+    addUserAddress(address,cb) {
+       addUserAddress({ userid: this.activeUserID, address: address }).then(
+        (response) => {
+          cb()
+          this.$refs.contractPeople.getChatData();
+        }
+      );
+    },
   },
 };
 </script>
@@ -157,6 +278,10 @@ export default {
   justify-content: space-between;
   .contactTypeRadio {
     margin-right: 20px;
+  }
+
+  .select-filter {
+    width: 130px;
   }
 }
 
