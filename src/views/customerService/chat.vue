@@ -318,8 +318,6 @@ export default {
       userHeadBg: null,
       tagDialogVisiable: false,
       showAddTagInput: false,
-      // activeUserID:$parent.activeUserID,
-
       allUserTags: [],
       inputNewTagValue: "",
     };

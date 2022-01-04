@@ -20,7 +20,7 @@
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item
               v-for="item of alltags"
-              :key="item"
+              :key="item.id"
               :command="item"
             >
               {{ item.desc }}
@@ -243,21 +243,22 @@ export default {
     getUserTags() {
       getUserTags().then((response) => {
         this.alltags = response.data.tags;
+        console.log(this.alltags);
       });
     },
 
     delUserAddress(address) {
-       deleteUserAddress({ userid: this.activeUserID, address: address }).then(
+      deleteUserAddress({ userid: this.activeUserID, address: address }).then(
         (response) => {
           this.$refs.contractPeople.getChatData();
         }
       );
     },
 
-    addUserAddress(address,cb) {
-       addUserAddress({ userid: this.activeUserID, address: address }).then(
+    addUserAddress(address, cb) {
+      addUserAddress({ userid: this.activeUserID, address: address }).then(
         (response) => {
-          cb()
+          cb();
           this.$refs.contractPeople.getChatData();
         }
       );
