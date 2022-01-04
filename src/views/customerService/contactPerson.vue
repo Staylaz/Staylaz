@@ -64,6 +64,7 @@
         :class="{ 'is-active': item.userid === $parent.activeUserID }"
         @click="switchChat(item)"
       >
+      
         <div class="head-img">
           <img v-if="item['photo']" :src="item['photo']" alt="" />
 
@@ -77,9 +78,12 @@
           </div>
         </div>
         <div class="info-box">
-          <p class="name-box">
-            <span class="id">{{ item.userid }}</span>
-          </p>
+          <div class="name-box">
+            <div class="id">
+              <el-tag type="info" size="mini">{{ item.userid }} </el-tag>
+              {{item['user']['firstname'] + item['user']['lastname']}}     
+            </div>
+          </div>
           <p class="message">{{ filterTag }}</p>
         </div>
 
@@ -334,6 +338,11 @@ export default {
           font-size: 14px;
           font-weight: 800;
           color: #323233;
+          .id {
+               overflow: hidden;
+            text-overflow:ellipsis;
+            white-space: nowrap;
+          }
         }
         .message {
           line-height: 14px;
