@@ -31,9 +31,8 @@
                   title="Delete this address?"
                   confirm-button-text="Confirm"
                   cancel-button-text="Cancel"
-                 @onConfirm="deleteUserAddress(address)"
+                  @onConfirm="deleteUserAddress(address)"
                 >
-               
                   <i class="el-icon-close" slot="reference"></i>
                 </el-popconfirm>
               </el-tag>
@@ -336,6 +335,7 @@ export default {
   computed: {
     userTag() {
       let _tags = this.$parent.activeUser.user.tags.split(",");
+      console.log(this.$parent.activeUser);
       _tags.map((tag, index) => {
         if (!tag) {
           _tags.splice(index, 1);
@@ -374,7 +374,7 @@ export default {
       this.$parent.delUserTag(tag, () => {});
     },
 
-    deleteUserAddress(address){
+    deleteUserAddress(address) {
       this.$parent.delUserAddress(address, () => {});
     },
 
@@ -489,7 +489,7 @@ export default {
 };
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .chat-container {
   height: 100%;
   box-sizing: border-box;
@@ -805,5 +805,3 @@ export default {
   }
 }
 </style>
-
-
