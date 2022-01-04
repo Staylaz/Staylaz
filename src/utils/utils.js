@@ -41,7 +41,6 @@ function transformDate(date) {
     return `${year}-${mouth}-${day}`
 }
 
-
 function getDateDiff(date)  {  
     const time = new Date(parseInt(date) * 1000);
     let _currentDate = new Date();
