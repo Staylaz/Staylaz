@@ -1,6 +1,9 @@
 <template>
   <div class="dashboard-editor-container">
-    <panel-group @handleSetLineChartData="handleSetLineChartData" />
+    <panel-group
+      :tokendata="tokenData"
+      @handleSetLineChartData="handleSetLineChartData"
+    />
 
     <el-row style="background: #fff; padding: 16px 16px 0; margin-bottom: 32px">
       <line-chart :chart-data="lineChartData" />
@@ -60,36 +63,41 @@
 </template>
 
 <script>
+import tokenInfo from "@/api/token";
 import LineChart from "./components/LineChart";
 import RaddarChart from "./components/RaddarChart";
 import PieChart from "./components/PieChart";
 import BarChart from "./components/BarChart";
 import TransactionTable from "./components/TransactionTable";
 import TodoList from "./components/TodoList";
-import PanelGroup from "./components/PanelGroup.vue";
 import BoxCard from "./components/BoxCard";
+import PanelGroup from "./components/PanelGroup.vue";
 
-const lineChartData = {
-  newVisitis: {
-    expectedData: [100, 120, 161, 134, 105, 160, 165],
-    actualData: [120, 82, 91, 154, 162, 140, 145],
+let lineChartData = {
+  holders:{
+    actualData:[]
   },
-  messages: {
-    expectedData: [200, 192, 120, 144, 160, 130, 140],
-    actualData: [180, 160, 151, 106, 145, 150, 130],
+  totalsupply:{
+      actualData:[]
   },
-  purchases: {
-    expectedData: [80, 100, 121, 104, 105, 90, 100],
-    actualData: [120, 90, 100, 138, 142, 130, 130],
+  lpamount:{
+      actualData:[]
   },
-  shoppings: {
-    expectedData: [130, 140, 141, 142, 145, 150, 160],
-    actualData: [120, 82, 91, 154, 162, 140, 130],
+  price:{
+      actualData:[]
   },
+  useramount:{
+      actualData:[]
+  },
+  gameamount:{
+      actualData:[]
+  },
+  devamount:{
+      actualData:[]
+  }
 };
 
 export default {
-  name: "DashboardAdmin",
   components: {
     PanelGroup,
     LineChart,
@@ -102,12 +110,39 @@ export default {
   },
   data() {
     return {
-      lineChartData: lineChartData.newVisitis,
+      lineChartData: lineChartData.holders,
+      tokenData: null,
     };
+  },
+  mounted() {
+    this.getTokenInfo();
   },
   methods: {
     handleSetLineChartData(type) {
       this.lineChartData = lineChartData[type];
+    },
+    getTokenInfo() {
+      tokenInfo.getTokenInfo("dk").then((res) => {
+        let datas = res.data.data
+        let today = datas[0],
+          yestoday = datas.find(
+            (item) => item.timestamp == today.timestamp - 3600 * 24
+          );
+        datas.sort((a,b)=>{
+          return b.timestamp - a.timestamp
+        })
+        datas.length =7;
+        datas.forEach(item=>{
+          for(var i in lineChartData){
+            lineChartData[i].actualData.push(item[i])
+          }
+        })
+        this.tokenData = {
+          today,
+          yestoday,
+        };
+
+      });
     },
   },
 };

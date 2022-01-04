@@ -131,15 +131,14 @@
             </div>
 
             <div class="message-content">
-              <p class="name">
+              <p class="name" v-if="item.senderid === item.userid">
                 <span class="name"
                   >{{ $parent.activeUser.user.firstname }}
                   {{ $parent.activeUser.user.lastname }}</span
                 >
                 <span class="id">{{ item.senderid }}</span>
-
-                <!-- {{item}} -->
               </p>
+              <p v-else></p>
               <p class="message">
                 <!-- <img src="" alt=""> -->
                 <span>{{ item.message }}</span>

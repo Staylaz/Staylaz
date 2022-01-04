@@ -118,7 +118,6 @@ export default {
             action: "chat",
           },
           function (code, msg, data) {
-            console.log("UPDATE USERS", data);
             data.users.map((user) => {
               that.chatUsersData[user.userid] = user;
             });
