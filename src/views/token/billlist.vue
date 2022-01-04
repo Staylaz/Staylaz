@@ -99,12 +99,12 @@
         align="center"
       >
         <template slot-scope="{ row }">
-          <span>{{ row.txhash }}</span>
+          <span @click="toTxhashDetail(row.txhash)">{{ row.txhash }}</span>
         </template>
       </el-table-column>
       <el-table-column label="Address" min-width="300px" align="center">
         <template slot-scope="{ row }">
-          <span>{{ row.address }}</span>
+          <span @click="toAddressDetail(row.address)">{{ row.address }}</span>
         </template>
       </el-table-column>
       <el-table-column label="Action" min-width="150px" align="center">
@@ -267,6 +267,12 @@ export default {
             this.listLoading = false;
           }, 1.5 * 1000);
         });
+    },
+    toTxhashDetail(txhash) {
+      window.open(`https://bscscan.com/tx/${txhash}`);
+    },
+    toAddressDetail(address) {
+      window.open(`https://bscscan.com/address/${address}`);
     },
     handleFilter() {
       this.listQuery.page = 1;
