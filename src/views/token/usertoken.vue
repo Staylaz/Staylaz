@@ -6,6 +6,7 @@
         placeholder="User Address"
         style="width: 400px; margin-right: 10px"
         class="filter-item"
+        clearable
         @keyup.enter.native="handleFilter"
       />
       <el-select
@@ -58,6 +59,11 @@
       >
         <template slot-scope="{ row }">
           <span>{{ row.id }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="Mint Time" min-width="400px" align="center">
+        <template slot-scope="{ row }">
+          <el-tag>{{ row.minttime | parseTimestamp }}</el-tag>
         </template>
       </el-table-column>
       <el-table-column label="Address" min-width="400px" align="center">
@@ -135,7 +141,6 @@
 <script>
 import tokenInfo from "@/api/token";
 import waves from "@/directive/waves";
-import { parseTime } from "@/utils";
 import Pagination from "@/components/Pagination";
 
 export default {
@@ -304,6 +309,18 @@ export default {
   filters: {
     filterTokenAmount(value) {
       return value / 10 ** 3;
+    },
+    parseTimestamp(value) {
+      let timestamp = value * 1000;
+      let date = new Date(timestamp);
+      let year = date.getFullYear();
+      let month = date.getMonth() + 1;
+      let day = date.getDate();
+      let hour = date.getHours();
+      let min = date.getMinutes();
+      let sec = date.getSeconds();
+
+      return `${year}-${month}-${day} ${hour}:${min}`;
     },
   },
 };

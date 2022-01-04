@@ -72,29 +72,30 @@ import TransactionTable from "./components/TransactionTable";
 import TodoList from "./components/TodoList";
 import BoxCard from "./components/BoxCard";
 import PanelGroup from "./components/PanelGroup.vue";
+import getTokenPrice from "../../utils/tokenprice";
 
 let lineChartData = {
-  holders:{
-    actualData:[]
+  holders: {
+    actualData: [],
   },
-  totalsupply:{
-      actualData:[]
+  totalsupply: {
+    actualData: [],
   },
-  lpamount:{
-      actualData:[]
+  lpamount: {
+    actualData: [],
   },
-  price:{
-      actualData:[]
+  price: {
+    actualData: [],
   },
-  useramount:{
-      actualData:[]
+  useramount: {
+    actualData: [],
   },
-  gameamount:{
-      actualData:[]
+  gameamount: {
+    actualData: [],
   },
-  devamount:{
-      actualData:[]
-  }
+  devamount: {
+    actualData: [],
+  },
 };
 
 export default {
@@ -112,10 +113,12 @@ export default {
     return {
       lineChartData: lineChartData.holders,
       tokenData: null,
+      tokenPrice: null,
     };
   },
   mounted() {
     this.getTokenInfo();
+    this.getPrice();
   },
   methods: {
     handleSetLineChartData(type) {
@@ -123,26 +126,34 @@ export default {
     },
     getTokenInfo() {
       tokenInfo.getTokenInfo("dk").then((res) => {
-        let datas = res.data.data
+        let datas = res.data.data;
         let today = datas[0],
           yestoday = datas.find(
             (item) => item.timestamp == today.timestamp - 3600 * 24
           );
-        datas.sort((a,b)=>{
-          return b.timestamp - a.timestamp
-        })
-        datas.length =7;
-        datas.forEach(item=>{
-          for(var i in lineChartData){
-            lineChartData[i].actualData.push(item[i])
+        datas.sort((a, b) => {
+          return b.timestamp - a.timestamp;
+        });
+        datas.length = 7;
+        datas.forEach((item) => {
+          for (var i in lineChartData) {
+            lineChartData[i].actualData.push(item[i]);
           }
-        })
+        });
         this.tokenData = {
           today,
           yestoday,
         };
-
       });
+    },
+    async getPrice() {
+      let mainPrice = await getTokenPrice("main"),
+        vicePrice = await getTokenPrice("vice");
+      this.tokenPrice = {
+        main: mainPrice,
+        vice: vicePrice,
+      };
+      console.log(this.tokenPrice);
     },
   },
 };
@@ -153,7 +164,6 @@ export default {
   padding: 32px;
   background-color: rgb(240, 242, 245);
   position: relative;
-
   .github-corner {
     position: absolute;
     top: 0px;

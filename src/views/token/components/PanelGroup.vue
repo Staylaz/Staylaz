@@ -2,9 +2,6 @@
   <div class="panel-group" v-if="tokendata">
     <div class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('holders')">
-        <div class="card-panel-icon-wrapper icon-people">
-          <svg-icon icon-class="peoples" class-name="card-panel-icon" />
-        </div>
         <div class="card-panel-description">
           <div class="card-panel-text">Holders</div>
           <count-to
@@ -21,9 +18,6 @@
     </div>
     <div class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('totalsupply')">
-        <div class="card-panel-icon-wrapper icon-message">
-          <svg-icon icon-class="message" class-name="card-panel-icon" />
-        </div>
         <div class="card-panel-description">
           <div class="card-panel-text">Total Supply</div>
           <count-to
@@ -40,9 +34,6 @@
     </div>
     <div class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('lpamount')">
-        <div class="card-panel-icon-wrapper icon-message">
-          <svg-icon icon-class="message" class-name="card-panel-icon" />
-        </div>
         <div class="card-panel-description">
           <div class="card-panel-text">LP Amount</div>
           <count-to
@@ -59,9 +50,6 @@
     </div>
     <div class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('price')">
-        <div class="card-panel-icon-wrapper icon-money">
-          <svg-icon icon-class="money" class-name="card-panel-icon" />
-        </div>
         <div class="card-panel-description">
           <div class="card-panel-text">Price</div>
           <count-to
@@ -78,9 +66,6 @@
     </div>
     <div class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('useramount')">
-        <div class="card-panel-icon-wrapper icon-shopping">
-          <svg-icon icon-class="shopping" class-name="card-panel-icon" />
-        </div>
         <div class="card-panel-description">
           <div class="card-panel-text">User Amount</div>
           <count-to
@@ -98,9 +83,6 @@
     </div>
     <div class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('gameamount')">
-        <div class="card-panel-icon-wrapper icon-shopping">
-          <svg-icon icon-class="shopping" class-name="card-panel-icon" />
-        </div>
         <div class="card-panel-description">
           <div class="card-panel-text">Game Amount</div>
           <count-to
@@ -117,9 +99,6 @@
     </div>
     <div class="card-panel-col">
       <div class="card-panel" @click="handleSetLineChartData('devamount')">
-        <div class="card-panel-icon-wrapper icon-shopping">
-          <svg-icon icon-class="shopping" class-name="card-panel-icon" />
-        </div>
         <div class="card-panel-description">
           <div class="card-panel-text">Dev Amount</div>
           <count-to
@@ -148,8 +127,7 @@ export default {
     tokendata: Object,
   },
   watch: {
-    tokendata(newVal) {
-    },
+    tokendata(newVal) {},
   },
   methods: {
     handleSetLineChartData(type) {
