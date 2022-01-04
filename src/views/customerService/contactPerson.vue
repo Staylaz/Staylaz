@@ -85,7 +85,7 @@
             <div class="name-box">
               <div class="id">
                 <el-tag type="info" size="mini">{{ item.userid }} </el-tag>
-                {{ item["user"]["firstname"] + item["user"]["lastname"] }}
+                {{ (item["user"]["firstname"]?'':item["user"]["firstname"]) + (item["user"]["lastname"]?' '+item["user"]["lastname"]:'') }}
               </div>
             </div>
             <p class="message">{{ filterTag }}</p>
