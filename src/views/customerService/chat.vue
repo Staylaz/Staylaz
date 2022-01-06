@@ -84,7 +84,7 @@
             type="info"
             plain
             style="cursor: pointer"
-            @click="tagDialogVisiable = true"
+            @click="showSelectTags"
           >
             + Select tag
           </el-tag>
@@ -223,7 +223,7 @@
       <div class="tag-list">
         <el-tag
           v-for="tag in allUserTags"
-          :key="tag"
+          :key="tag.desc"
           class="tag"
           :disable-transitions="false"
           type="info"
@@ -233,7 +233,7 @@
             :label="tag['desc']"
             :checked="tag['checked']"
             :disabled="tag['disabled']"
-            @change="tag['checked'] = !tag['checked']"
+            v-model="tag.checked"
           ></el-checkbox>
         </el-tag>
       </div>
@@ -286,7 +286,9 @@
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="tagDialogVisiable = false">Cancel</el-button>
-        <el-button type="primary" @click="batchAddTags">Confirm</el-button>
+        <el-button type="primary" @click="handleInputConfirm"
+          >Confirm</el-button
+        >
       </span>
     </el-dialog>
     <!-- DIALOG -->
@@ -296,14 +298,13 @@
 <script>
 import { VEmojiPicker } from "v-emoji-picker";
 import timestampTo12Hour from "@/utils/utils";
-import { getUserTags } from "@/api/user";
+import { getUserTags, getUserBalances } from "@/api/user";
 
 export default {
   name: "Contract",
   components: {
     VEmojiPicker,
   },
-
   data() {
     return {
       inputVisible: false,
@@ -323,7 +324,7 @@ export default {
     };
   },
 
-  created() {
+  mounted() {
     if (this.$parent.activeUser) {
       this.scrollToBottom();
       this.userHeadBg = this.randomRgb();
@@ -333,7 +334,7 @@ export default {
   computed: {
     userTag() {
       let _tags = this.$parent.activeUser.user.tags.split(",");
-      console.log(this.$parent.activeUser);
+
       _tags.map((tag, index) => {
         if (!tag) {
           _tags.splice(index, 1);
@@ -341,8 +342,15 @@ export default {
       });
       return _tags;
     },
+    activeUser() {
+      return this.$parent.activeUser;
+    },
   },
-
+  watch: {
+    activeUser(newVal, oldVal) {
+      if (newVal) this.getUserTags();
+    },
+  },
   filters: {
     addressFilter(address) {
       let _address = address.slice(0, 4);
@@ -357,13 +365,16 @@ export default {
       getUserTags().then((response) => {
         this.allUserTags = response.data.tags;
         let _usertags = this.filterUserTags();
-        this.allUserTags.map((tag) => {
-          tag["disabled"] = _usertags.indexOf(tag["desc"]) > -1;
-          tag["checked"] = tag["disabled"];
+        this.allUserTags.forEach((tag, index) => {
+          let disabled = _usertags.indexOf(tag["desc"]) != -1,
+            checked = disabled;
+          console.log(disabled);
+          console.log(checked);
+          this.$set(this.allUserTags[index], "disabled", disabled);
+          this.$set(this.allUserTags[index], "checked", checked);
         });
       });
     },
-
     toggleBatchChat() {
       this.$store.dispatch("app/toggleSideBar"); // TODO
     },
@@ -383,25 +394,20 @@ export default {
       });
     },
 
-    handleInputConfirm() {
-      const inputValue = this.inputValue;
-      this.$parent.addUserTag(inputValue, () => {
-        this.inputVisible = false;
-        this.inputValue = "";
-      });
+    showSelectTags() {
+      this.tagDialogVisiable = true;
     },
 
     handleInputConfirm() {
-      const inputValue = this.inputValue;
-      this.$parent.addUserTag(inputValue, () => {
+      let tags = [];
+      this.allUserTags.forEach((item) => {
+        if (item.checked && item.disabled == false) tags.push(item);
+      });
+      this.$parent.addUserTag(tags, () => {
         this.inputVisible = false;
         this.inputValue = "";
+        this.getUserTags();
       });
-      // if (inputValue) {
-      //   this.userTags.push(inputValue);
-      // }
-      // this.inputVisible = false;
-      // this.inputValue = "";
     },
 
     onInput(event) {
@@ -483,6 +489,10 @@ export default {
         this.inputAddressValue = "";
       });
     },
+  },
+
+  beforeDestroy() {
+    console.log("before Destroy");
   },
 };
 </script>

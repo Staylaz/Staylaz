@@ -72,7 +72,7 @@ import TransactionTable from "./components/TransactionTable";
 import TodoList from "./components/TodoList";
 import BoxCard from "./components/BoxCard";
 import PanelGroup from "./components/PanelGroup.vue";
-import getTokenPrice from "../../utils/tokenprice";
+import priceUtil from "../../utils/tokenprice";
 
 let lineChartData = {
   holders: {
@@ -147,8 +147,8 @@ export default {
       });
     },
     async getPrice() {
-      let mainPrice = await getTokenPrice("main"),
-        vicePrice = await getTokenPrice("vice");
+      let mainPrice = await priceUtil.getTokenPrice("main"),
+        vicePrice = await priceUtil.getTokenPrice("vice");
       this.tokenPrice = {
         main: mainPrice,
         vice: vicePrice,

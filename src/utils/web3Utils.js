@@ -1,21 +1,12 @@
 import axios from "axios";
+import web3Instance from "./web3Instance";
 
-let getTokenBalance = async (address, contract) => {
-  let urls = "https://api.bscscan.com/api";
-  let res = await axios.get(urls, {
-    params: {
-      module: "account",
-      action: "tokenbalance",
-      contractaddress: contract,
-      address: address,
-      tag: "latest",
-      apikey: "E75R8FC6XC1M6WPN7TG7HWTYD2XK4Z865N",
-    },
-  });
-
-  return res;
+let getBalanceByWeb3 = async (address, type) => {
+  let tokenContract = await web3Instance.getErc20Contract(type);
+  let balance = await tokenContract.methods.balanceOf(address).call();
+  return balance;
 };
 
 export default {
-  getTokenBalance,
+  getBalanceByWeb3,
 };

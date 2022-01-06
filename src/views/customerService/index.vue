@@ -95,6 +95,7 @@ import ChatContainer from "./chat.vue";
 import BatchChatContainer from "./batchChat.vue";
 import ResourceLibraryContainer from "./resourceLibrary.vue";
 import TodoVue from "../dashboard/admin/components/TodoList/Todo.vue";
+import priceUtil from "../../utils/tokenprice";
 import {
   getUserTags,
   addUserTag,
@@ -123,12 +124,14 @@ export default {
       batchUsersId: [],
       alltags: [],
       filterTagValue: "",
+      bnbPrice: "",
     };
   },
   watch: {},
   created() {
     this.onSocketMessage();
     this.getUserTags();
+    this.getBnbPrice();
   },
   methods: {
     handleContactType(type) {
@@ -160,7 +163,6 @@ export default {
         function (code, msg, data) {
           console.log("message", data);
           that.chatRecord = data.messages;
-          that.$refs.chat.scrollToBottom();
           that.chatRecord.sort((a, b) => {
             return a.mid - b.mid <= 0 ? -1 : 1;
           });
@@ -223,10 +225,13 @@ export default {
 
     addUserTag(tags, cb) {
       tags.forEach((tag) => {
-        addUserTag({ userid: this.activeUserID, tag: tag }).then((response) => {
-          cb();
-          this.$refs.contractPeople.getChatData();
-        });
+        addUserTag({ userid: this.activeUserID, tag: tag.desc }).then(
+          (response) => {
+            cb();
+            this.$refs.contractPeople.getChatData();
+            this.getUserTags();
+          }
+        );
       });
     },
 
@@ -236,14 +241,17 @@ export default {
         (response) => {
           cb();
           this.$refs.contractPeople.getChatData();
+          this.getUserTags();
         }
       );
     },
-
+    async getBnbPrice() {
+      this.bnbPrice = await priceUtil.getBnbPrice();
+      console.log(this.bnbPrice);
+    },
     getUserTags() {
       getUserTags().then((response) => {
         this.alltags = response.data.tags;
-        console.log(this.alltags);
       });
     },
 
