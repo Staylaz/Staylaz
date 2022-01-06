@@ -182,7 +182,7 @@ export default {
         },
         function (code, msg, data) {
           cb();
-          // that.getChatRecord(null);
+          that.getChatRecord(null);
         }
       );
     },
@@ -219,6 +219,7 @@ export default {
         if (id === this.activeUserID) {
           this.getChatRecord(null);
         }
+        console.log(this.$refs.contractPeople);
         this.$refs.contractPeople.getChatData();
       });
     },

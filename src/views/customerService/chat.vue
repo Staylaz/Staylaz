@@ -15,7 +15,9 @@
         <div class="information-box">
           <el-breadcrumb separator-class="el-icon-minus">
             <el-breadcrumb-item>
-              {{ $parent["activeUser"]["userid"] }}</el-breadcrumb-item
+              {{
+                $parent["activeUser"]["userid"] | filterUserId
+              }}</el-breadcrumb-item
             >
             <el-breadcrumb-item
               v-for="address in $parent['activeUser']['user']['address'].split(
@@ -99,10 +101,10 @@
             v-for="(item, index) in $parent.chatRecord"
             :key="index"
             class="chat-record-item"
-            :class="{ 'mine-message-item': item.senderid !== item.userid }"
+            :class="{ 'mine-message-item': item.senderId !== item.userId }"
           >
             <div class="head-box">
-              <div v-if="item.senderid === item.userid">
+              <div v-if="item.senderId === item.userId">
                 <img
                   v-if="$parent.activeUser['photo']"
                   :src="$parent.activeUser['photo']"
@@ -130,7 +132,7 @@
             </div>
 
             <div class="message-content">
-              <p class="name" v-if="item.senderid === item.userid">
+              <p class="name" v-if="item.senderId == item.userId">
                 <span class="name"
                   >{{ $parent.activeUser.user.firstname }}
                   {{ $parent.activeUser.user.lastname }}</span
@@ -155,6 +157,9 @@
               </p>
             </div>
           </div>
+        </div>
+        <div class="unread-icon" v-if="unreadMsgsLength != 0">
+          {{ unreadMsgsLength }}
         </div>
       </div>
 
@@ -321,6 +326,8 @@ export default {
       showAddTagInput: false,
       allUserTags: [],
       inputNewTagValue: "",
+      haveUnreadMsgs: false,
+      unreadMsgsLength: 0,
     };
   },
 
@@ -345,21 +352,28 @@ export default {
     activeUser() {
       return this.$parent.activeUser;
     },
+    chatRecords() {
+      return this.$parent.chatRecord;
+    },
   },
   watch: {
     activeUser(newVal, oldVal) {
       if (newVal) this.getUserTags();
     },
-  },
-  filters: {
-    addressFilter(address) {
-      let _address = address.slice(0, 4);
-      _address += "****";
-      _address += address.slice(address.length - 4, address.length);
-      return _address;
+    chatRecords(newVal, oldVal) {
+      console.log(newVal[newVal.length - 1]);
+      if (newVal[newVal.length - 1].senderId == 0) {
+        this.scrollToBottom();
+      } else {
+        if (this.checkMessageToBottom()) {
+          this.scrollToBottom();
+        } else {
+          let newRecordLength = newVal.length - oldVal.length;
+          this.unreadMsgsLength += newRecordLength;
+        }
+      }
     },
   },
-
   methods: {
     getUserTags() {
       getUserTags().then((response) => {
@@ -489,8 +503,33 @@ export default {
         this.inputAddressValue = "";
       });
     },
+    checkMessageToBottom() {
+      let chatContent = document.querySelector(".chat-content");
+      let scrollTop = chatContent.scrollTop,
+        contentHeight = chatContent.clientHeight,
+        scrollHeight = chatContent.scrollHeight;
+      return scrollTop + contentHeight == scrollHeight;
+    },
   },
-
+  filters: {
+    addressFilter(address) {
+      let _address = address.slice(0, 4);
+      _address += "****";
+      _address += address.slice(address.length - 4, address.length);
+      return _address;
+    },
+    filterUserId(value) {
+      let valStr = value + "",
+        userIdLength = valStr.length;
+      if (userIdLength < 3) {
+        let length = 3 - userIdLength;
+        for (var i = 0; i < length; i++) {
+          valStr = "0" + valStr;
+        }
+      }
+      return valStr;
+    },
+  },
   beforeDestroy() {
     console.log("before Destroy");
   },
@@ -599,6 +638,7 @@ export default {
       box-sizing: border-box;
       padding: 0 16px;
       overflow-y: auto;
+      position: relative;
       // background-color: rgb(165, 45, 45);
       .chat-record-list {
         width: 100%;
@@ -713,6 +753,11 @@ export default {
             flex-direction: row-reverse;
           }
         }
+      }
+      .unread-icon {
+        position: absolute;
+        left: 20px;
+        bottom: 10px;
       }
     }
 

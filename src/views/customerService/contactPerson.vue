@@ -84,8 +84,15 @@
           <div class="info-box">
             <div class="name-box">
               <div class="id">
-                <el-tag type="info" size="mini">{{ item.userid }} </el-tag>
-                {{ (item["user"]["firstname"]?item["user"]["firstname"]:'') + (item["user"]["lastname"]?' '+item["user"]["lastname"]:'') }}
+                <el-tag type="info" size="mini"
+                  >{{ item.userid | filterUserId }}
+                </el-tag>
+                {{
+                  (item["user"]["firstname"] ? item["user"]["firstname"] : "") +
+                  (item["user"]["lastname"]
+                    ? " " + item["user"]["lastname"]
+                    : "")
+                }}
               </div>
             </div>
             <p class="message">{{ filterTag }}</p>
@@ -293,6 +300,19 @@ export default {
       return {
         background: "rgb(" + R + "," + G + "," + B + ")",
       };
+    },
+  },
+  filters: {
+    filterUserId(value) {
+      let valStr = value + "",
+        userIdLength = valStr.length;
+      if (userIdLength < 3) {
+        let length = 3 - userIdLength;
+        for (var i = 0; i < length; i++) {
+          valStr = "0" + valStr;
+        }
+      }
+      return valStr;
     },
   },
 };

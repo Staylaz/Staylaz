@@ -4,20 +4,23 @@
       <svg-icon icon-class="search" />
     </div>
     <div class="contract-people-balance">
-      <div class="bnb-price">BNB Price:${{ this.$parent.bnbPrice }}</div>
+      <div class="bnb-price">
+        <span>BNB Price:</span>
+        <span>${{ this.$parent.bnbPrice }}</span>
+      </div>
       <div class="user-balance-list">
         <div
           class="user-balance-item"
           v-for="item in userBalances"
           :key="item.address"
         >
-          <p>{{ item.address }}</p>
+          <p class="user-address">{{ item.address | addressFilter }}</p>
           <ul>
-            <li>BNB:{{ item.balance.BNB }}</li>
+            <li>BNB:{{ item.balance.BNB | filterTokenAmount }}</li>
 
-            <li>BUSD:{{ item.balance.BUSD }}</li>
+            <li>BUSD:{{ item.balance.BUSD | filterTokenAmount }}</li>
 
-            <li>USDT:{{ item.balance.USDT }}</li>
+            <li>USDT:{{ item.balance.USDT | filterTokenAmount }}</li>
           </ul>
         </div>
       </div>
@@ -87,7 +90,12 @@ export default {
     },
   },
   filters: {
-    filterAccount() {},
+    addressFilter(address) {
+      let _address = address.slice(0, 4);
+      _address += "****";
+      _address += address.slice(address.length - 4, address.length);
+      return _address;
+    },
     filterTokenAmount(value) {
       let num = value / 10 ** 18;
       return num.toFixed(3);
@@ -113,6 +121,51 @@ export default {
     display: flex;
     align-items: center;
     justify-content: space-between;
+  }
+  .contract-people-balance {
+    min-height: 30%;
+    background-color: #fff;
+    .bnb-price {
+      font-size: 18px;
+      text-align: center;
+      line-height: 40px;
+      background: linear-gradient(
+        180deg,
+        rgb(209, 209, 209),
+        rgba(218, 212, 212, 0.2),
+        rgb(209, 209, 209)
+      );
+      span:first-child {
+        font-size: 20px;
+      }
+      span:last-child {
+        color: red;
+      }
+    }
+    .user-balance-list {
+      padding: 5px 10px;
+      .user-balance-item {
+        font-size: 14px;
+        .user-address {
+          line-height: 22px;
+          padding: 0 5px;
+          border: 1px solid #000;
+          margin: 0;
+        }
+        ul {
+          padding: 0;
+          margin: 0;
+          border: 1px solid #000;
+          border-top: none;
+          li {
+            list-style: none;
+            line-height: 20px;
+            margin: 0;
+            padding: 0;
+          }
+        }
+      }
+    }
   }
 }
 </style>
