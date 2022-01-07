@@ -361,7 +361,6 @@ export default {
       if (newVal) this.getUserTags();
     },
     chatRecords(newVal, oldVal) {
-      console.log(newVal[newVal.length - 1]);
       if (newVal[newVal.length - 1].senderId == 0) {
         this.scrollToBottom();
       } else {
@@ -369,6 +368,7 @@ export default {
           this.scrollToBottom();
         } else {
           let newRecordLength = newVal.length - oldVal.length;
+          console.log(newRecordLength);
           this.unreadMsgsLength += newRecordLength;
         }
       }

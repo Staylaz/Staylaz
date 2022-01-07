@@ -63,7 +63,6 @@
       <div class="contract-people-list" ref="scrollList">
         <div
           v-for="(item, index) in showUsers"
-          v-show="contractPeopleFilter(item)"
           :key="index"
           class="people-item"
           :class="{ 'is-active': item.userid === $parent.activeUserID }"
@@ -95,7 +94,6 @@
                 }}
               </div>
             </div>
-            <p class="message">{{ filterTag }}</p>
           </div>
 
           <div class="status-box">
@@ -133,7 +131,7 @@ import { getUserHeadImg } from "@/api/user";
 export default {
   name: "Contract",
   props: {
-    filtertagvalue: String,
+    filters: Object,
   },
   filters: {
     timestampFilter(time) {
@@ -163,6 +161,7 @@ export default {
       searchContractPeople: false,
       searchContractPeopleValue: "",
       chatUsersData: [],
+      chatUsersFilted: [],
       ws: this.$store.state.socket.ws,
       isUnreadType: false,
     };
@@ -173,19 +172,44 @@ export default {
   },
   mounted() {},
   computed: {
-    filterTag() {
-      return this.filtertagvalue;
-    },
     showUsers() {
-      return this.chatUsersData.slice(this.start, this.end);
+      return this.chatUsersFilted.slice(this.start, this.end);
     },
     usersNumber() {
-      return this.chatUsersData.length;
+      return this.chatUsersFilted.length;
     },
   },
   watch: {
     usersNumber(newVal) {
       console.log(newVal);
+    },
+    filters(newVal, oldVal) {
+      console.log(newVal);
+      let { usd, tag } = newVal;
+      if (!usd && !tag) {
+        this.chatUsersFilted = this.chatUsersData;
+        return;
+      } else if (usd && !tag) {
+        let max = usd.max,
+          min = usd.min;
+
+        this.chatUsersFilted = this.chatUsersData.filter((item) => {
+          let usdall = item.user.usdall / 1000;
+          console.log(usdall);
+          console.log(min <= usdall && usdall <= max, item.user.usdall);
+          return min <= usdall && usdall <= max;
+        });
+      } else if (tag && !usd) {
+        let desc = tag.desc;
+        this.chatUsersFilted = this.chatUsersData.filter((item) => {
+          return item.user.tags.split(",").indexOf(desc) != -1;
+        });
+      } else {
+        this.filterUsers(tag, usd);
+      }
+      this.getVirtualListSize();
+      this.start = 0;
+      this.end = this.showNum;
     },
   },
   methods: {
@@ -205,14 +229,17 @@ export default {
             _userData.push(user);
           });
           that.chatUsersData = _userData;
-          console.log(that.chatUsersData[0]);
+          that.chatUsersFilted = _userData.slice(0);
           that.getVirtualListSize();
           if (!that.$parent.activeUserID) {
+            console.log("11111111");
             that.switchChat(data.users[0]);
+            return;
           }
           data.users.map((user) => {
             that.$parent.batchUsersId.push(user.userid);
             if (that.$parent.activeUserID === user.userid) {
+              console.log("2222222");
               that.switchChat(user);
             }
           });
@@ -244,31 +271,12 @@ export default {
     },
 
     switchChat(user) {
+      console.log("switch");
       this.$parent.getChatRecord(user);
     },
 
     timestampTo12Hour(timestamp) {
       return timestampTo12Hour(timestamp);
-    },
-
-    contractPeopleFilter(item) {
-      let _result = false;
-      if (!this.searchContractPeople) {
-        _result = true;
-        if (this.filterTag) {
-          _result = item["user"]["tags"].indexOf(this.filterTag) > -1;
-        }
-        // if (this.isUnreadType) {
-        //   return item.number;
-        // }
-      } else {
-        _result = this.searchContractPeopleValue.indexOf(item.userid) > -1;
-        if (this.filterTag && _result) {
-          _result = item["user"]["tags"].indexOf(this.filterTag) > -1;
-        }
-      }
-
-      return _result;
     },
 
     getVirtualListSize() {
@@ -277,7 +285,8 @@ export default {
       let pageNum = parseInt(this.listClientHeight / 74);
       this.showNum = pageNum;
       this.end = pageNum;
-      this.$refs.scrollBar.style.height = this.chatUsersData.length * 74 + "px";
+      this.$refs.scrollBar.style.height =
+        this.chatUsersFilted.length * 74 + "px";
       this.isResized = true;
     },
 
@@ -292,7 +301,20 @@ export default {
     updateListSize(oldLen, newLen) {
       this.$refs.scrollList.style.top = newLen;
     },
-
+    filterUsers(tag, usd) {
+      console.log(tag, usd);
+      let max = usd.max,
+        min = usd.min,
+        desc = tag.desc;
+      this.chatUsersFilted = this.chatUsersData.filter((item) => {
+        let userTags = item.user.tags.split(","),
+          usdall = item.user.usdall / 1000;
+        let tagFlag = userTags.indexOf(desc) >= 0;
+        let usdFlag = min <= usdall && usdall <= max;
+        console.log(tagFlag, usdFlag);
+        return usdFlag && tagFlag;
+      });
+    },
     randomRgb(item) {
       let R = Math.floor(Math.random() * 130 + 110);
       let G = Math.floor(Math.random() * 130 + 110);

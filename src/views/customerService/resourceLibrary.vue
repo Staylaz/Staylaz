@@ -16,11 +16,17 @@
         >
           <p class="user-address">{{ item.address | addressFilter }}</p>
           <ul>
-            <li>BNB:{{ item.balance.BNB | filterTokenAmount }}</li>
+            <li>
+              BNB: <span>{{ item.balance.BNB | filterTokenAmount }}</span>
+            </li>
 
-            <li>BUSD:{{ item.balance.BUSD | filterTokenAmount }}</li>
+            <li>
+              BUSD: <span>{{ item.balance.BUSD | filterTokenAmount }}</span>
+            </li>
 
-            <li>USDT:{{ item.balance.USDT | filterTokenAmount }}</li>
+            <li>
+              USDT: <span>{{ item.balance.USDT | filterTokenAmount }}</span>
+            </li>
           </ul>
         </div>
       </div>
@@ -146,8 +152,11 @@ export default {
       padding: 5px 10px;
       .user-balance-item {
         font-size: 14px;
+        margin-bottom: 10px;
         .user-address {
-          line-height: 22px;
+          color: darkcyan;
+          cursor: pointer;
+          line-height: 30px;
           padding: 0 5px;
           border: 1px solid #000;
           margin: 0;
@@ -159,9 +168,17 @@ export default {
           border-top: none;
           li {
             list-style: none;
-            line-height: 20px;
+            line-height: 30px;
             margin: 0;
             padding: 0;
+            padding-left: 5px;
+            border-bottom: 1px solid #000;
+            span {
+              margin-left: 5px;
+            }
+          }
+          li:last-child {
+            border: none;
           }
         }
       }
