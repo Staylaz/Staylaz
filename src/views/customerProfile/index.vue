@@ -28,8 +28,8 @@
         size="small"
       >
         <el-option
-          v-for="item in nftQuantityOptions"
-          :key="item.key"
+          v-for="(item, index) in nftQuantityOptions"
+          :key="index"
           :label="item.display_name"
           :value="item.key"
         />
@@ -54,7 +54,7 @@
 
       <el-select
         v-model="listQuery.active"
-        placeholder="Active"
+        placeholder="Tags Filter"
         clearable
         class="filter-item"
         size="small"
@@ -141,14 +141,14 @@
         :class-name="getSortClass('id')"
       >
         <template slot-scope="{ row }">
-          <span>{{ row.id }}</span>
+          <span>{{ row.id | filterUserId }}</span>
         </template>
       </el-table-column>
 
       <!-- Txh Hash -->
       <el-table-column
-        label="Txh Hash"
-        prop="txhHash"
+        label="User Addresses"
+        prop="User Addresses"
         align="center"
         width="150"
       >
@@ -157,9 +157,57 @@
             v-for="(item, index) in row.address.split(',')"
             :key="index"
             size="small"
+            style="margin-bottom: 5px"
             v-show="item.length > 20"
             >{{ item | addressFilter }}</el-tag
           >
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="USD"
+        prop="usdall"
+        sortable="custom"
+        align="center"
+        width="100"
+      >
+        <template slot-scope="{ row }">
+          <span>{{ row.usdall / 1000 }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="BNB"
+        prop="bnb"
+        sortable="custom"
+        align="center"
+        width="100"
+        :class-name="getSortClass('id')"
+      >
+        <template slot-scope="{ row }">
+          <span>{{ row.bnb / 1000 }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="BUSD"
+        prop="busd"
+        sortable="custom"
+        align="center"
+        width="100"
+        :class-name="getSortClass('id')"
+      >
+        <template slot-scope="{ row }">
+          <span>{{ row.busd / 1000 }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="USDT"
+        prop="usdt"
+        sortable="custom"
+        align="center"
+        width="100"
+        :class-name="getSortClass('id')"
+      >
+        <template slot-scope="{ row }">
+          <span>{{ row.usdt / 1000 }}</span>
         </template>
       </el-table-column>
 
@@ -173,35 +221,35 @@
         :class-name="getSortClass('id')"
       >
         <template slot-scope="{ row }">
-          <span>{{ row.id }}</span>
+          <span>{{ row.nft }}</span>
         </template>
       </el-table-column>
 
       <!-- YOC -->
       <el-table-column
         label="YOC"
-        prop="nftQuantity"
+        prop="yoc"
         sortable="custom"
         align="center"
         width="120"
         :class-name="getSortClass('id')"
       >
         <template slot-scope="{ row }">
-          <span>{{ row.nft_quantity }}</span>
+          <span>{{ row.nft }}</span>
         </template>
       </el-table-column>
 
       <!-- SPICE -->
       <el-table-column
         label="SPICE"
-        prop="nftQuantity"
+        prop="spice"
         sortable="custom"
         align="center"
         width="120"
         :class-name="getSortClass('id')"
       >
         <template slot-scope="{ row }">
-          <span>{{ row.nft_quantity }}</span>
+          <span>{{ row.spice }}</span>
         </template>
       </el-table-column>
 
@@ -210,13 +258,13 @@
         label="Active"
         prop="txhHash"
         align="center"
-        min-width="180"
+        min-width="120"
       >
         <template slot-scope="{ row }">
           <el-tag
             v-for="(item, index) in row.tags.split(',')"
             :key="index"
-            v-show="!!item"
+            v-show="item"
             size="small"
             >{{ item }}</el-tag
           >
@@ -307,7 +355,7 @@
       <el-table-column
         label="Actions"
         align="center"
-        width="230"
+        min-width="230"
         class-name="small-padding fixed-width"
       >
         <template slot-scope="{ row, $index }">
@@ -527,6 +575,17 @@ export default {
       _address += address.slice(address.length - 4, address.length);
       return _address;
     },
+    filterUserId(value) {
+      let valStr = value + "",
+        userIdLength = valStr.length;
+      if (userIdLength < 3) {
+        let length = 3 - userIdLength;
+        for (var i = 0; i < length; i++) {
+          valStr = "0" + valStr;
+        }
+      }
+      return valStr;
+    },
   },
   data() {
     return {
@@ -541,8 +600,8 @@ export default {
         { key: "200", display_name: "101-200" },
         { key: "300", display_name: "201-300" },
         { key: "400", display_name: "1-100" },
-        { key: "200", display_name: "101-200" },
-        { key: "300", display_name: "201-300" },
+        { key: "500", display_name: "101-200" },
+        { key: "600", display_name: "201-300" },
       ],
 
       dialogBatchVisible: false,
@@ -789,7 +848,7 @@ export default {
 };
 </script>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 .filter-container {
   .filter-item {
     margin-right: 16px;
@@ -820,4 +879,3 @@ export default {
   margin-top: 20px;
 }
 </style>
-

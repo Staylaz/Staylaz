@@ -15,7 +15,7 @@
         <div class="information-box">
           <el-breadcrumb separator-class="el-icon-minus">
             <el-breadcrumb-item>
-              {{ $parent["activeUser"]["userid"] }}</el-breadcrumb-item
+              {{ $parent["activeUser"]["userId"] }}</el-breadcrumb-item
             >
             <el-breadcrumb-item
               v-for="address in $parent['activeUser']['user']['address'].split(
@@ -101,7 +101,7 @@
             :key="index"
             class="chat-record-item"
             :style="item.senderId == 1?'flex: 1;text-align: right;':''"
-            :class="{ 'mine-message-item': item.senderid !== item.userid }"
+            :class="{ 'mine-message-item': item.senderId !== item.userId }"
             v-show="item['timestamp']"
           >
             <div class="head-box" :style="item.senderId == 1?'float:right;margin-bottom:30px;':''">
@@ -153,12 +153,12 @@
             </div> -->
 
             <div class="message-content">
-              <p class="name" v-if="item.senderid === item.userid">
+              <p class="name" v-if="item.senderId === item.userId">
                 <span class="name"
                   >{{ $parent.activeUser.user.firstname }}
                   {{ $parent.activeUser.user.lastname }}</span
                 >
-                <span class="id">{{ item.senderid }}</span>
+                <span class="id">{{ item.senderId }}</span>
               </p>
               <p v-else></p>
               <p class="message">
@@ -381,14 +381,22 @@ export default {
       return _tags;
     },
   },
-  
-
-  filters: {
-    addressFilter(address) {
-      let _address = address.slice(0, 4);
-      _address += "****";
-      _address += address.slice(address.length - 4, address.length);
-      return _address;
+  watch: {
+    activeUser(newVal, oldVal) {
+      if (newVal) this.getUserTags();
+    },
+    chatRecords(newVal, oldVal) {
+      if (newVal[newVal.length - 1].senderId == 0) {
+        this.scrollToBottom();
+      } else {
+        if (this.checkMessageToBottom()) {
+          this.scrollToBottom();
+        } else {
+          let newRecordLength = newVal.length - oldVal.length;
+          console.log(newRecordLength);
+          this.unreadMsgsLength += newRecordLength;
+        }
+      }
     },
   },
 
@@ -527,6 +535,14 @@ export default {
       });
     },
   },
+  filters:{
+    addressFilter(address){
+       let _address = address.slice(0, 4);
+      _address += "****";
+      _address += address.slice(address.length - 4, address.length);
+      return _address;
+    }
+  }
 };
 </script>
 

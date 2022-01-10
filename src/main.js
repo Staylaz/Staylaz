@@ -21,14 +21,12 @@ import "./utils/error-log"; // error log
 
 import * as filters from "./filters"; // global filters
 
-import VueLazyLoad from "vue-lazyload"
+// import VueLazyLoad from "vue-lazyload"
 
-Vue.use(VueLazyLoad,{
-
-  　　　　error:"./static/a1.jpg",
-  
-  　　　　loading:"./static/loading.gif"
-  　　});
+// Vue.use(VueLazyLoad, {
+//   error: "./static/a1.jpg",
+//   loading: "./static/loading.gif"
+// });
 
 
 /**

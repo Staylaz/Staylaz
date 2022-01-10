@@ -37,10 +37,26 @@
           size="mini"
         >
           <el-option
-            v-for="item of alltags"
+            v-for="(item, index) of alltags"
             :key="item.id"
             :label="item.desc"
-            :value="item.tag"
+            :value="index"
+          ></el-option>
+        </el-select>
+        <el-select
+          v-model="filterUsdValue"
+          @clear="filterUsdValue = ''"
+          style="margin-left: 5px"
+          clearable
+          class="select-filter"
+          placeholder="Filter by USD"
+          size="mini"
+        >
+          <el-option
+            v-for="item of filterUsdOptions"
+            :key="item.id"
+            :label="item.label"
+            :value="item.id"
           ></el-option>
         </el-select>
       </div>
@@ -67,7 +83,7 @@
     <div class="customer-service-container">
       <contract-people-container
         ref="contractPeople"
-        :filtertagvalue="filterTagValue"
+        :filters="filterOptions"
       />
       <chat-container ref="chat" v-show="!batchChatType" />
       <batch-chat-container v-show="batchChatType"></batch-chat-container>
@@ -124,12 +140,48 @@ export default {
       batchUsersId: [],
       alltags: [],
       filterTagValue: "",
+      filterUsdValue: "",
+      filterUsdOptions: [
+        { id: 0, max: 0, min: 0, label: "0" },
+        { id: 1, max: 500, min: 1, label: "1 - 500", name: "Shrimp" },
+        { id: 2, max: 1000, min: 501, label: "500 - 1000", name: "Crab" },
+        { id: 3, max: 2000, min: 1001, label: "1000 - 2000", name: "Octopus" },
+        { id: 4, max: 5000, min: 2001, label: "2000 - 5000", name: "Dolphin" },
+        { id: 5, max: 10000, min: 5001, label: "5000 - 10000", name: "Shark" },
+        {
+          id: 6,
+          max: 100000,
+          min: 10001,
+          label: "10000 - 100000",
+          name: "Whale",
+        },
+        {
+          id: 7,
+          max: 999999,
+          min: "100001",
+          label: "100000 - 999999",
+          name: "God",
+        },
+      ],
+      bnbPrice: "",
     };
   },
   watch: {},
   created() {
     this.onSocketMessage();
     this.getUserTags();
+  },
+  computed: {
+    filterOptions() {
+      console.log(this.filterTagValue, this.alltags);
+      let tagOption =
+        this.filterTagValue === "" ? null : this.alltags[this.filterTagValue];
+      let usdOption =
+        this.filterUsdValue === ""
+          ? null
+          : this.filterUsdOptions[this.filterUsdValue];
+      return { usd: usdOption, tag: tagOption };
+    },
   },
   methods: {
     handleContactType(type) {
@@ -146,6 +198,7 @@ export default {
     },
 
     getChatRecord(user) {
+      console.log("UUuuuUUUUUUUUUUUU", user);
       if (user) {
         this.activeUser = user;
         this.activeUserID = user.userid;
@@ -215,7 +268,7 @@ export default {
         },
         function (code, msg, data) {
           cb();
-          // that.getChatRecord(null);
+          that.getChatRecord(null);
         }
       );
     },
