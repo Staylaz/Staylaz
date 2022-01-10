@@ -15,9 +15,7 @@
         <div class="information-box">
           <el-breadcrumb separator-class="el-icon-minus">
             <el-breadcrumb-item>
-              {{
-                $parent["activeUser"]["userid"] | filterUserId
-              }}</el-breadcrumb-item
+              {{ $parent["activeUser"]["userid"] }}</el-breadcrumb-item
             >
             <el-breadcrumb-item
               v-for="address in $parent['activeUser']['user']['address'].split(
@@ -86,7 +84,7 @@
             type="info"
             plain
             style="cursor: pointer"
-            @click="showSelectTags"
+            @click="tagDialogVisiable = true"
           >
             + Select tag
           </el-tag>
@@ -95,15 +93,18 @@
     </div>
 
     <div class="chat-box">
+      <!-- 聊天内容 -->
       <div ref="chatMain" class="chat-content">
         <div class="chat-record-list">
           <div
             v-for="(item, index) in $parent.chatRecord"
             :key="index"
             class="chat-record-item"
-            :class="{ 'mine-message-item': item.senderId !== item.userId }"
+            :style="item.senderId == 1?'flex: 1;text-align: right;':''"
+            :class="{ 'mine-message-item': item.senderid !== item.userid }"
+            v-show="item['timestamp']"
           >
-            <div class="head-box">
+            <div class="head-box" :style="item.senderId == 1?'float:right;margin-bottom:30px;':''">
               <div v-if="item.senderId === item.userId">
                 <img
                   v-if="$parent.activeUser['photo']"
@@ -124,15 +125,35 @@
                 </div>
               </div>
 
-              <img
-                v-else
-                src="https://hbimg.huabanimg.com/a36868b3c1c33dccecd8d15069349ec38bf784191c616-E7yMVb"
-                alt=""
-              />
+              <img v-else src="https://hbimg.huabanimg.com/301ec7f94fda5ef131788dacaa40a2904abe363d29e56-rlooy4_fw1200" alt="" />
             </div>
 
+            <!-- <div class="head-box" style="float:right;" v-if="item.senderId == 1">
+              <div v-if="item.senderid === item.userid">
+                <img
+                  v-if="$parent.activeUser['photo']"
+                  :src="$parent.activeUser['photo']"
+                  alt=""
+                />
+                <div
+                  class="name-abb"
+                  :style="$parent.activeUser.bgcolor"
+                  v-else
+                >
+                  <span v-if="$parent.activeUser.user['firstname']">{{
+                    $parent.activeUser.user.firstname[0]
+                  }}</span>
+                  <span v-if="$parent.activeUser.user['lastname']">
+                    {{ $parent.activeUser.user.lastname[0] }}</span
+                  >
+                </div>
+              </div>
+
+              <img v-else :src="item['img']" alt="" />
+            </div> -->
+
             <div class="message-content">
-              <p class="name" v-if="item.senderId == item.userId">
+              <p class="name" v-if="item.senderid === item.userid">
                 <span class="name"
                   >{{ $parent.activeUser.user.firstname }}
                   {{ $parent.activeUser.user.lastname }}</span
@@ -143,23 +164,33 @@
               <p class="message">
                 <!-- <img src="" alt=""> -->
                 <span>{{ item.message }}</span>
-                <!-- <el-image
+
+                <!-- {{item.media.indexOf('photo')}} -->
+
+                <el-image
+                  v-show="item.media && item.media.indexOf('document') == -1"
                   style="width: 100px; height: 100px"
-                  src="https://hbimg.huabanimg.com/a939f3ff0d6945d6f6736d08ddde7518bc5b2bc51a6dc-34dwbk"
+                  :src="item['img']"
                   :preview-src-list="[
                     'https://hbimg.huabanimg.com/a939f3ff0d6945d6f6736d08ddde7518bc5b2bc51a6dc-34dwbk',
                   ]"
                 >
-                </el-image> -->
+                </el-image>
+                <tgs-player
+                  v-show="item.media && item.media.indexOf('photo') == -1"
+                  autoplay
+                  loop
+                  mode="normal"
+                  :src="item['img']"
+                >
+                </tgs-player>
+
                 <span class="time">{{
                   timestampTo12Hour(item.timestamp)
                 }}</span>
               </p>
             </div>
           </div>
-        </div>
-        <div class="unread-icon" v-if="unreadMsgsLength != 0">
-          {{ unreadMsgsLength }}
         </div>
       </div>
 
@@ -228,7 +259,7 @@
       <div class="tag-list">
         <el-tag
           v-for="tag in allUserTags"
-          :key="tag.desc"
+          :key="tag"
           class="tag"
           :disable-transitions="false"
           type="info"
@@ -238,7 +269,7 @@
             :label="tag['desc']"
             :checked="tag['checked']"
             :disabled="tag['disabled']"
-            v-model="tag.checked"
+            @change="tag['checked'] = !tag['checked']"
           ></el-checkbox>
         </el-tag>
       </div>
@@ -291,9 +322,7 @@
 
       <span slot="footer" class="dialog-footer">
         <el-button @click="tagDialogVisiable = false">Cancel</el-button>
-        <el-button type="primary" @click="handleInputConfirm"
-          >Confirm</el-button
-        >
+        <el-button type="primary" @click="batchAddTags">Confirm</el-button>
       </span>
     </el-dialog>
     <!-- DIALOG -->
@@ -303,13 +332,15 @@
 <script>
 import { VEmojiPicker } from "v-emoji-picker";
 import timestampTo12Hour from "@/utils/utils";
-import { getUserTags, getUserBalances } from "@/api/user";
+import { getUserTags } from "@/api/user";
+// import "@lottiefiles/lottie-player";
 
 export default {
   name: "Contract",
   components: {
     VEmojiPicker,
   },
+
   data() {
     return {
       inputVisible: false,
@@ -324,14 +355,15 @@ export default {
       userHeadBg: null,
       tagDialogVisiable: false,
       showAddTagInput: false,
+      // activeUserID:$parent.activeUserID,
+
       allUserTags: [],
       inputNewTagValue: "",
-      haveUnreadMsgs: false,
-      unreadMsgsLength: 0,
     };
   },
 
-  mounted() {
+  created() {
+    this.ceshi();
     if (this.$parent.activeUser) {
       this.scrollToBottom();
       this.userHeadBg = this.randomRgb();
@@ -341,7 +373,6 @@ export default {
   computed: {
     userTag() {
       let _tags = this.$parent.activeUser.user.tags.split(",");
-
       _tags.map((tag, index) => {
         if (!tag) {
           _tags.splice(index, 1);
@@ -349,46 +380,33 @@ export default {
       });
       return _tags;
     },
-    activeUser() {
-      return this.$parent.activeUser;
-    },
-    chatRecords() {
-      return this.$parent.chatRecord;
+  },
+  
+
+  filters: {
+    addressFilter(address) {
+      let _address = address.slice(0, 4);
+      _address += "****";
+      _address += address.slice(address.length - 4, address.length);
+      return _address;
     },
   },
-  watch: {
-    activeUser(newVal, oldVal) {
-      if (newVal) this.getUserTags();
-    },
-    chatRecords(newVal, oldVal) {
-      console.log(newVal[newVal.length - 1]);
-      if (newVal[newVal.length - 1].senderId == 0) {
-        this.scrollToBottom();
-      } else {
-        if (this.checkMessageToBottom()) {
-          this.scrollToBottom();
-        } else {
-          let newRecordLength = newVal.length - oldVal.length;
-          this.unreadMsgsLength += newRecordLength;
-        }
-      }
-    },
-  },
+
   methods: {
+    ceshi() {
+      console.log(this.$parent.chatRecord.message);
+    },
     getUserTags() {
       getUserTags().then((response) => {
         this.allUserTags = response.data.tags;
         let _usertags = this.filterUserTags();
-        this.allUserTags.forEach((tag, index) => {
-          let disabled = _usertags.indexOf(tag["desc"]) != -1,
-            checked = disabled;
-          console.log(disabled);
-          console.log(checked);
-          this.$set(this.allUserTags[index], "disabled", disabled);
-          this.$set(this.allUserTags[index], "checked", checked);
+        this.allUserTags.map((tag) => {
+          tag["disabled"] = _usertags.indexOf(tag["desc"]) > -1;
+          tag["checked"] = tag["disabled"];
         });
       });
     },
+
     toggleBatchChat() {
       this.$store.dispatch("app/toggleSideBar"); // TODO
     },
@@ -408,20 +426,25 @@ export default {
       });
     },
 
-    showSelectTags() {
-      this.tagDialogVisiable = true;
+    handleInputConfirm() {
+      const inputValue = this.inputValue;
+      this.$parent.addUserTag(inputValue, () => {
+        this.inputVisible = false;
+        this.inputValue = "";
+      });
     },
 
     handleInputConfirm() {
-      let tags = [];
-      this.allUserTags.forEach((item) => {
-        if (item.checked && item.disabled == false) tags.push(item);
-      });
-      this.$parent.addUserTag(tags, () => {
+      const inputValue = this.inputValue;
+      this.$parent.addUserTag(inputValue, () => {
         this.inputVisible = false;
         this.inputValue = "";
-        this.getUserTags();
       });
+      // if (inputValue) {
+      //   this.userTags.push(inputValue);
+      // }
+      // this.inputVisible = false;
+      // this.inputValue = "";
     },
 
     onInput(event) {
@@ -503,40 +526,18 @@ export default {
         this.inputAddressValue = "";
       });
     },
-    checkMessageToBottom() {
-      let chatContent = document.querySelector(".chat-content");
-      let scrollTop = chatContent.scrollTop,
-        contentHeight = chatContent.clientHeight,
-        scrollHeight = chatContent.scrollHeight;
-      return scrollTop + contentHeight == scrollHeight;
-    },
-  },
-  filters: {
-    addressFilter(address) {
-      let _address = address.slice(0, 4);
-      _address += "****";
-      _address += address.slice(address.length - 4, address.length);
-      return _address;
-    },
-    filterUserId(value) {
-      let valStr = value + "",
-        userIdLength = valStr.length;
-      if (userIdLength < 3) {
-        let length = 3 - userIdLength;
-        for (var i = 0; i < length; i++) {
-          valStr = "0" + valStr;
-        }
-      }
-      return valStr;
-    },
-  },
-  beforeDestroy() {
-    console.log("before Destroy");
   },
 };
 </script>
 
 <style lang="scss" scoped>
+tgs-player {
+  width: 100px;
+  height: 100px;
+}
+#canvas {
+  box-shadow: 1px 1px 10px 1px black;
+}
 .chat-container {
   height: 100%;
   box-sizing: border-box;
@@ -638,12 +639,16 @@ export default {
       box-sizing: border-box;
       padding: 0 16px;
       overflow-y: auto;
-      position: relative;
       // background-color: rgb(165, 45, 45);
       .chat-record-list {
         width: 100%;
         padding-bottom: 30px;
+        display: flex;
+        flex-direction: column;
+        // align-items: flex-end;
         .chat-record-item {
+          // flex: 1;
+          // text-align: right;
           // width: 100%;
           // background-color: rgb(221, 238, 66);
           //background-color: rgb(228, 89, 89);
@@ -664,6 +669,7 @@ export default {
             border-radius: 50%;
             overflow: hidden;
             position: relative;
+            // float: right;
             img {
               position: absolute;
               left: 50%;
@@ -686,6 +692,7 @@ export default {
 
           .message-content {
             display: inline-block;
+            // text-align: right;
             background-color: #f2f3f5;
             border-radius: 10px;
             padding: 2px 10px;
@@ -753,11 +760,6 @@ export default {
             flex-direction: row-reverse;
           }
         }
-      }
-      .unread-icon {
-        position: absolute;
-        left: 20px;
-        bottom: 10px;
       }
     }
 

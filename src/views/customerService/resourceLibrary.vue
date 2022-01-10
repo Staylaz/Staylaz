@@ -8,6 +8,7 @@
         <span>BNB Price:</span>
         <span>${{ this.$parent.bnbPrice }}</span>
       </div>
+      <tgs-player></tgs-player>
       <div class="user-balance-list">
         <div
           class="user-balance-item"

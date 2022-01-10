@@ -21,6 +21,16 @@ import "./utils/error-log"; // error log
 
 import * as filters from "./filters"; // global filters
 
+import VueLazyLoad from "vue-lazyload"
+
+Vue.use(VueLazyLoad,{
+
+  　　　　error:"./static/a1.jpg",
+  
+  　　　　loading:"./static/loading.gif"
+  　　});
+
+
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api

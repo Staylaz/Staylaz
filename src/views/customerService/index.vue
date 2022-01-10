@@ -20,7 +20,7 @@
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item
               v-for="item of alltags"
-              :key="item.id"
+              :key="item"
               :command="item"
             >
               {{ item.desc }}
@@ -95,7 +95,6 @@ import ChatContainer from "./chat.vue";
 import BatchChatContainer from "./batchChat.vue";
 import ResourceLibraryContainer from "./resourceLibrary.vue";
 import TodoVue from "../dashboard/admin/components/TodoList/Todo.vue";
-import priceUtil from "../../utils/tokenprice";
 import {
   getUserTags,
   addUserTag,
@@ -118,20 +117,19 @@ export default {
       tags: ["activity1", "activity2", "activity3", "activity4"],
       activeUserID: null,
       activeUser: null,
+      // 存储发送过来的信息
       chatRecord: [],
       ws: this.$store.state.socket.ws,
       batchChatType: false,
       batchUsersId: [],
       alltags: [],
       filterTagValue: "",
-      bnbPrice: "",
     };
   },
   watch: {},
   created() {
     this.onSocketMessage();
     this.getUserTags();
-    this.getBnbPrice();
   },
   methods: {
     handleContactType(type) {
@@ -162,10 +160,45 @@ export default {
         },
         function (code, msg, data) {
           console.log("message", data);
+          // 将发送过来的信息进行存储
           that.chatRecord = data.messages;
+          for (var i = 0; i < that.chatRecord.length; i++) {
+            if (!!that.chatRecord[i].media) that.getChatImg(that.chatRecord[i],i);
+          }
+          that.$refs.chat.scrollToBottom();
           that.chatRecord.sort((a, b) => {
             return a.mid - b.mid <= 0 ? -1 : 1;
           });
+        }
+      );
+    },
+
+    getChatImg(info,i) {
+      var that = this;
+
+      this.ws.emit(
+        "telegram",
+        {
+          action: "media",
+          userid: this.activeUserID,
+          mid:info.mid
+        },
+        function (code, msg, data) {
+          info['img'] = data['media'];
+          that.chatRecord.splice(i,1,info)
+          // for(var i=0;i<that.chatRecord.length;i++){
+          //   console.log(that.chatRecord[i].img) 
+          // }
+
+          // // 将发送过来的信息进行存储
+          // that.chatRecord = data.messages;
+          // for (var i = 0; i < that.chatRecord.length; i++) {
+          //   // if (!that.chatRecord[i].media) that.getChatImg();
+          // }
+          // that.$refs.chat.scrollToBottom();
+          // that.chatRecord.sort((a, b) => {
+          //   return a.mid - b.mid <= 0 ? -1 : 1;
+          // });
         }
       );
     },
@@ -182,7 +215,7 @@ export default {
         },
         function (code, msg, data) {
           cb();
-          that.getChatRecord(null);
+          // that.getChatRecord(null);
         }
       );
     },
@@ -219,20 +252,16 @@ export default {
         if (id === this.activeUserID) {
           this.getChatRecord(null);
         }
-        console.log(this.$refs.contractPeople);
         this.$refs.contractPeople.getChatData();
       });
     },
 
     addUserTag(tags, cb) {
       tags.forEach((tag) => {
-        addUserTag({ userid: this.activeUserID, tag: tag.desc }).then(
-          (response) => {
-            cb();
-            this.$refs.contractPeople.getChatData();
-            this.getUserTags();
-          }
-        );
+        addUserTag({ userid: this.activeUserID, tag: tag }).then((response) => {
+          cb();
+          this.$refs.contractPeople.getChatData();
+        });
       });
     },
 
@@ -242,14 +271,10 @@ export default {
         (response) => {
           cb();
           this.$refs.contractPeople.getChatData();
-          this.getUserTags();
         }
       );
     },
-    async getBnbPrice() {
-      this.bnbPrice = await priceUtil.getBnbPrice();
-      console.log(this.bnbPrice);
-    },
+
     getUserTags() {
       getUserTags().then((response) => {
         this.alltags = response.data.tags;

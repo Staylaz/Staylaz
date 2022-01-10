@@ -39,7 +39,7 @@ module.exports = {
     // after: require('./mock/mock-server.js'),
     proxy: {
       [process.env.VUE_APP_BASE_API]: {
-        target: "https://api.huloot.io",
+        target: "https://testapi.huloot.io",
         changeOrigin: true,
         pathRewrite: {
           ["^" + process.env.VUE_APP_BASE_API]: "",
